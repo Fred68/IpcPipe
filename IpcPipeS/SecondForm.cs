@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace IpcPipeS
 {
-	public partial class Form1:Form
+	public partial class SecondForm:Form
 	{
-		public Form1()
+		public SecondForm(string pipeIn, string pipeOut, string strDelay, string strDelayClose)
 		{
 			InitializeComponent();
 		}

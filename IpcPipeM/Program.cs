@@ -1,9 +1,9 @@
 
 using Fred68.CfgReader;
 using NcForms;
+using IpcPipes;
 
-
-namespace IpcPipe
+namespace IpcPipeM
 {
     internal static class Program
     {

@@ -8,7 +8,7 @@ using Fred68.CfgReader;
 
 
 
-namespace IpcPipe
+namespace IpcPipeM
 {
 	#pragma warning disable CS8618	// Non nullable...
 	public class CFG : CfgReader

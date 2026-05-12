@@ -1,4 +1,4 @@
-﻿namespace IpcPipe
+﻿namespace IpcPipeM
 {
     partial class MainForm
     {

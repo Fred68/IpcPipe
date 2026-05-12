@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CfgReader\CfgReader.csproj" />
+    <ProjectReference Include="..\IpcPipe\IpcPipe.csproj" />
     <ProjectReference Include="..\NcForm\NcForm.csproj" />
   </ItemGroup>
 

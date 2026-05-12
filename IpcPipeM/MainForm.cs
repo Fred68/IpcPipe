@@ -1,7 +1,8 @@
 
 using NcForms;
+using IpcPipes;
 
-namespace IpcPipe
+namespace IpcPipeM
 {
 	public partial class MainForm:NcForm
 	{
@@ -10,12 +11,7 @@ namespace IpcPipe
 		static Form? formRef;               // Riferimento statico a Form1
 		bool errorOnLoad;                   // Errore durante OnLoad()
 
-
-
-		public MainForm()
-		{
-			InitializeComponent();
-		}
+		IpcPipe ipc;
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg,string? path) : base(style,color,msgs)
 		{
@@ -34,14 +30,29 @@ namespace IpcPipe
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 
+			string wpp = Path.GetRandomFileName().Replace(".","");
+			string rpp = Path.GetRandomFileName().Replace(".","");
 
-
+			IpcPipe.Info nfo = new IpcPipe.Info(wpp,rpp,100,false);
+			try
+			{
+				ipc = new IpcPipe(nfo);
+				int inst = ipc.CountKillInstances(nfo.killInstances);
+				if(inst != 1)
+				{
+					throw new Exception("Ammessa solo un'istanza del processo");
+				}
+				
+			}
+			catch(Exception ex)
+			{
+				NcMessageBox.Show(this,ex.Message);
+				Close();
+			}
 		}
 
 		private void MainForm_Load(object sender,EventArgs e)
 		{
-			Shown += MainForm_Shown;
-
 			if(errorOnLoad)    // Se errore durante OnLoad()
 			{
 				NcMessageBox.Show(this,"[Form1 .NET] Errore durante OnLoad(). Fine programma.");
@@ -51,7 +62,7 @@ namespace IpcPipe
 
 		private void MainForm_Shown(object sender,EventArgs e)
 		{
-			
+			int x = 1;
 		}
 	}
 }

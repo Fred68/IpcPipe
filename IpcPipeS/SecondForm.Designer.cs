@@ -1,6 +1,6 @@
 ﻿namespace IpcPipeS
 {
-	partial class Form1
+	partial class SecondForm
 	{
 		/// <summary>
 		/// Variabile di progettazione necessaria.
