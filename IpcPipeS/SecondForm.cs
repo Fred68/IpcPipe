@@ -12,7 +12,7 @@ namespace IpcPipeS
 {
 	public partial class SecondForm:Form
 	{
-		public SecondForm(string pipeIn, string pipeOut, string strDelay, string strDelayClose)
+		public SecondForm(CFGfw cfg)
 		{
 			InitializeComponent();
 		}

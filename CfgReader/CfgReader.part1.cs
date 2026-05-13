@@ -6,8 +6,8 @@ using System.Text;
 
 using System.IO;                            // Operazioni su file
 using System.Text.RegularExpressions;		// Regex
-using Fred68.StringExtension;                      // Funzioni extra
-using Fred68.GenDictionary;						// Dizionario generico
+using Fred68.StringExtension;               // Funzioni extra
+using Fred68.GenDictionary;					// Dizionario generico
 using System.Dynamic;						// Per usare dynamic e TryGetMember
 using System.Reflection;
 using System.Globalization;                 // Reflection (per accedere ai membri pubblici di una classe derivata)

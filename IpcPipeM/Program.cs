@@ -1,7 +1,10 @@
 
-using Fred68.CfgReader;
+
 using NcForms;
 using IpcPipes;
+
+using Fred68.CfgReader;
+
 
 namespace IpcPipeM
 {
@@ -9,7 +12,7 @@ namespace IpcPipeM
     {
 
 		public readonly static string _cfgFile = "CFG.cfg";
-		static string? _usrCfgFile, _path;
+		static string? _usrCfgFile;
         static CFG? cfg;       
        
 
@@ -52,7 +55,7 @@ namespace IpcPipeM
 			// Legge il file di configurazione
 			try
             {
-			    cfg.ReadConfiguration(useArg ? _usrCfgFile : _cfgFile);    // Legge il file di confogurazione
+			    cfg.ReadConfiguration(useArg ? _usrCfgFile : _cfgFile);    // Legge il file di configurazione
                 cfg.GetNames(true, false);		// Solo le voci del dizionario presenti nella classe derivata
             }
             catch
@@ -67,6 +70,8 @@ namespace IpcPipeM
                 MessageBox.Show(cfg.Message);
                 return;
             }
+
+			 //MessageBox.Show("Messages:" + Environment.NewLine + cfg.Message);
 
             cfg.Clear();						// Svuota il dizionario
 
@@ -106,18 +111,18 @@ namespace IpcPipeM
 			
 			NcMsg ncfm = new NcMsg();       // Usa classe derivata di NcformMsg
 
-			try
-            {
-                _path = Path.GetDirectoryName(System.Environment.ProcessPath);
-            }
-            catch
-            {
-                MessageBox.Show($"Error creating launch path");
-                return;  
-            }
+			//try
+            //{
+			//		_path = Path.GetDirectoryName(System.Environment.ProcessPath);
+            //}
+            //catch
+            //{
+			//		MessageBox.Show($"Error creating launch path");
+			//		return;  
+            //}
 
 			// Avvia il task con il MainForm derivato da NcForm (era: Application.Run(new MainForm());
-            Application.Run(new MainForm(ncfs, ncfc, ncfm, cfg, _path));
+            Application.Run(new MainForm(ncfs, ncfc, ncfm, cfg));
 
         }
     }

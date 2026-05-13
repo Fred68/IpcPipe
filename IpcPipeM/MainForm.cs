@@ -13,7 +13,7 @@ namespace IpcPipeM
 
 		IpcPipe ipc;
 
-		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg,string? path) : base(style,color,msgs)
+		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
 		{
 			InitializeComponent();          // Richiesto da Form Designer
 
