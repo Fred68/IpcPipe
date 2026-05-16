@@ -1,0 +1,9 @@
+
+/***********************************************/
+/*                                             */
+/* PROGETTO UNICO SU GITHUB                    */
+/* https://github.com/Fred68/IpcPipe           */
+/* Solo per messa a punto di una classe        */
+/* per la comunicazione con pipe               */
+/*                                             */
+/***********************************************/
