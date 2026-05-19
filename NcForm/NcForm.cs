@@ -219,8 +219,8 @@ namespace NcForms
 						break;
 
 					case NcFormWindowStates.BarOnly:
-						#warning Con BarOnly la larghezza è troppo ridotta e non è possibile trascinarla...
-						#warning ...nascondere i buttons inutili o ricalcolare larghezza ?
+						#warning CON BARONLY LA LARGHEZZA È TROPPO RIDOTTA E NON È POSSIBILE TRASCINARLA...
+						#warning ...NASCONDERE I BUTTONS INUTILI O RICALCOLARE LARGHEZZA ?
 						this.prevNcWindowsState = ncWindowsState;
 						if(this.prevNcWindowsState == NcFormWindowStates.Normal)
 						{
@@ -582,7 +582,7 @@ namespace NcForms
 								- (tsQuit.Width + tsItemExtraWidth);
 			availWidthLower = this.Width - statLabel.Width - reszLabel.Width;
 
-			#warning Errore nel calcolo della visibilità e della larghezza.
+			#warning ERRORE NEL CALCOLO DELLA VISIBILITÀ E DELLA LARGHEZZA.
 			if(availWidthUpper < minTitleSz.Width)
 			{
 				tsTitle.Visible = false;

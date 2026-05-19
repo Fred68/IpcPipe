@@ -19,7 +19,7 @@ using System.Globalization;                 // Reflection (per accedere ai membr
 namespace Fred68.CfgReader
 	{
 
-	#warning Aggiungere uso delle variabili (concatenazione, voce singola, somma, differenza)
+	#warning AGGIUNGERE USO DELLE VARIABILI (CONCATENAZIONE, VOCE SINGOLA, SOMMA, DIFFERENZA)
 
 	/// <summary>
 	/// Config text file reader

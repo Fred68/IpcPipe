@@ -36,7 +36,7 @@ namespace IpcPipes
 		private static readonly object _lockObj = new object();		// Oggetto per lock
 
 		Stack<string> _msg = new Stack<string>();					// stack dei messaggi
-		#warning stack dei messaggi: ricopaire la classe specializzata per gli errori
+		#warning STACK DEI MESSAGGI: AGGIUNGERE CLASSE PER GLI ERRORI ED EVENTUALE INTERFACCIA
 
 		NamedPipeServerStream psW;
 		NamedPipeClientStream psR;
