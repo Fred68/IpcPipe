@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 namespace IpcPipes
 {
-	public class IpcPipe
+	public class IpcPipe : ErrorMessages.ErrorMessages
 	{
 
 		public struct Info
@@ -50,7 +50,7 @@ namespace IpcPipes
 		/// <exception cref="Exception"></exception>
 		public IpcPipe(Info nfo)
 		{
-			if(!CheckIstanzaUnica())
+			if(!CheckNuovaIstanza())
 				throw new Exception(_msg.Pop());
 			if(!CreaPipe(nfo))
 				throw new Exception(_msg.Pop());
@@ -87,16 +87,16 @@ namespace IpcPipes
 		/// Controlla che ci sia un'istanza unica della classe
 		/// </summary>
 		/// <returns></returns>
-		private bool CheckIstanzaUnica()
+		private bool CheckNuovaIstanza(int nmax = 1)
 		{
 			bool ok = true;
 			lock(_lockObj)
 			{
 				_istanze++;
 			}
-			if(_istanze > 1)
+			if(_istanze > nmax)
 			{
-				_msg.Push("Ammessa una sola istanza di connessione");
+				_msg.Push($"Ammesse soltanto N°{nmax} istanze");
 				ok = false;
 			}
 			return ok;

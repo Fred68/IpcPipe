@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\IpcPipe\ErrorMessages.cs">
+      <Link>ErrorMessages.cs</Link>
+    </Compile>
     <Compile Include="..\IpcPipe\IpcPipe.cs">
       <Link>IpcPipe.cs</Link>
     </Compile>
