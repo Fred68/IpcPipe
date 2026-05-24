@@ -35,9 +35,6 @@ namespace IpcPipes
 		private static int _istanze = 0;							// Numero di istanze
 		private static readonly object _lockObj = new object();		// Oggetto per lock
 
-		Stack<string> _msg = new Stack<string>();					// stack dei messaggi
-		#warning STACK DEI MESSAGGI: AGGIUNGERE CLASSE PER GLI ERRORI ED EVENTUALE INTERFACCIA
-
 		NamedPipeServerStream psW;
 		NamedPipeClientStream psR;
 		static StreamReader sr;
@@ -50,10 +47,11 @@ namespace IpcPipes
 		/// <exception cref="Exception"></exception>
 		public IpcPipe(Info nfo)
 		{
+			ClearMessages();
 			if(!CheckNuovaIstanza())
-				throw new Exception(_msg.Pop());
+				throw new Exception(GetLastMessage());
 			if(!CreaPipe(nfo))
-				throw new Exception(_msg.Pop());
+				throw new Exception(GetLastMessage());
 		}
 
 
@@ -96,7 +94,7 @@ namespace IpcPipes
 			}
 			if(_istanze > nmax)
 			{
-				_msg.Push($"Ammesse soltanto N°{nmax} istanze");
+				AddMessage($"Ammesse soltanto N°{nmax} istanze");
 				ok = false;
 			}
 			return ok;
@@ -118,7 +116,7 @@ namespace IpcPipes
 			catch (Exception ex)
 			{
 				ok = false;
-				_msg.Push(ex.Message);
+				AddMessage(ex.Message);
 			}
 			return ok;
 		}

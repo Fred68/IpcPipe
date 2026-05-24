@@ -2,38 +2,39 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ErrorMessages
 {
+
+	#warning CLASSE ErrorMessages da controllare (probabilmente è ok).
 	public class ErrorMessages
 	{
 		
-		public enum Type {Messages=0, Errors, NUM};
+		public enum Type {Errors = 0,	Messages,	NUM};
 		
 		public static readonly int N_TYPES = (int)Type.NUM-1;
 		public static readonly string Separator = " - ";
 		
 		protected Stack<ErrorMsg>[] _msg;
+
 		protected class ErrorMsg
 		{
-			public string Messaggio { get; set; }
-			public string Dettaglio { get; set; }
+			public string Message { get; set; }
+			public string Detail { get; set; }
 			public ErrorMsg(string msg, string det)
 			{
-				Messaggio = msg;
-				Dettaglio = det;
+				Message = msg;
+				Detail = det;
 			}
-			public string ToLine()
+			public string ToString(bool details = false)
 			{
-				return Messaggio + ((Dettaglio.Length > 0) ? ErrorMessages.Separator : "") + Dettaglio + System.Environment.NewLine;
+				return Message + ((details && (Detail.Length > 0)) ? ErrorMessages.Separator : "") + Detail;
 			}
 		}
 
-		/// <summary>
-		/// CTOR
-		/// </summary>
 		public ErrorMessages()
 		{
 			_msg = new Stack<ErrorMsg>[N_TYPES];
@@ -43,12 +44,6 @@ namespace ErrorMessages
 			}
 		}
 
-		/// <summary>
-		/// Add a message
-		/// </summary>
-		/// <param name="msg"></param>
-		/// <param name="dett"></param>
-		/// <param name="typ"></param>
 		public void AddMessage(string msg, string dett = "", Type typ = Type.Messages)
 		{
 			int i = (int)typ;
@@ -58,11 +53,7 @@ namespace ErrorMessages
 			}
 		}
 
-		/// <summary>
-		/// Clear messages
-		/// </summary>
-		/// <param name="typ"></param>
-		public void Clear(Type typ = Type.NUM)
+		public void ClearMessages(Type typ = Type.NUM)
 		{
 			int i = (int)typ;
 			if (i == (int)Type.NUM)
@@ -74,80 +65,108 @@ namespace ErrorMessages
 				_msg[i].Clear();
 		}
 
-		/// <summary>
-		/// Enumerator
-		/// </summary>
-		/// <param name="typ"></param>
-		/// <returns></returns>
-		protected IEnumerable<ErrorMsg> Messages(Type typ)
+		protected IEnumerable<ErrorMsg> Messages(Type typ = Type.NUM)
 		{
-			#warning AGGIUNGERE IL NUMERO TOTALE e ARG DI DEFAULT, vd. Clear()
 			int i = (int)typ;
-			if((i >= 0) && (i < (int)Type.NUM))
+			if (i == (int)Type.NUM)
 			{
-				foreach (ErrorMsg str in _msg[i])
-					yield return str;
+				for(int j = 0; j<(int)Type.NUM; j++)
+				{
+					foreach (ErrorMsg msg in _msg[j])
+						yield return msg;
+				}
+			}
+			else if((i >= 0) && (i < (int)Type.NUM))
+			{
+				foreach (ErrorMsg msg in _msg[i])
+					yield return msg;
 			}
 			yield break;
 		}
 
-		/// <summary>
-		/// Get number of messages
-		/// </summary>
-		/// <param name="typ"></param>
-		/// <returns></returns>
-		public int Nmessages(Type typ)
+		protected List<ErrorMsg> MessageList(Type typ)
 		{
-			#warning AGGIUNGERE IL NUMERO TOTALE e ARG DI DEFAULT, vd. Clear()
+			List<ErrorMsg> lm = new List<ErrorMsg>();
+			int i = (int) typ;
+			if((i >= 0) && (i < (int)Type.NUM))
+			{
+				foreach (ErrorMsg msg in Messages(typ))
+					lm.Add(msg);
+				lm = lm.Distinct().ToList();	
+			}
+			return lm;
+		}
+
+		public int GetMessagesNumber(Type typ = Type.NUM)
+		{
 			int n = 0;
 			int i = (int) typ;
-			if ((i >= 0) && (i < (int)Type.NUM))
+			if (i == (int)Type.NUM)
+			{
+				for(int j = 0; j<(int)Type.NUM; j++)
+				{
+					n += _msg[i].Count;
+				}
+			}
+			else if((i >= 0) && (i < (int)Type.NUM))
 			{
 				n = _msg[i].Count;
 			}
-			
 			return n;
 		}
 
-		/// <summary>
-		/// Has messages
-		/// </summary>
-		/// <param name="typ"></param>
-		/// <returns></returns>
-		public bool HasMessages(Type typ)
+		public bool HasMessages(Type typ = Type.NUM)
 		{
 			bool hasMsg = false;
-			if (Nmessages(typ) > 0)
+			if (GetMessagesNumber(typ) > 0)
 				hasMsg = true;
 			return hasMsg;
 		}
 
-		public string ToString(ErrorMessages.Type typ)
+		public bool HasErrors()
 		{
-			#warning AGGIUNGERE IL NUMERO TOTALE e ARG DI DEFAULT, vd. Clear()
-			StringBuilder strb = new StringBuilder();
-			List<string> lm = new List<string>();
-
-			foreach (ErrorMsg msg in Messages(typ))
-				lm.Add(msg.ToLine());
-			lm = lm.Distinct().ToList();
-
-			foreach (string str in lm)
-				strb.Append(str /*+ Environment.NewLine*/);
-			return strb.ToString();
+			return HasMessages(Type.Errors);
 		}
 
-		public string MessaggiCompleti()
+		public string GetLastMessage(Type typ = Type.Errors, bool detail = false)
 		{
-            StringBuilder strb = new StringBuilder();
-			string s1, s2;
-			s1 = ToString(ErrorMessages.Type.Errors);
-			s2 = ToString(ErrorMessages.Type.Messages);
-			if(s1.Length > 0)
-				strb.Append("Errori"+ System.Environment.NewLine + s1+ Environment.NewLine);
-			if(s2.Length > 0)
-				strb.Append("Avvisi"+ System.Environment.NewLine + s2);
-            return strb.ToString();
-        }
+			StringBuilder sb = new StringBuilder();
+			int i = (int) typ;
+			if((i >= 0) && (i < (int)Type.NUM))
+			{
+				if(HasMessages(typ))
+					sb.Append(_msg[i].Peek().ToString(detail));
+			}
+			return sb.ToString();
+		}
+		
+		public string GetMessagesString(Type typ = Type.NUM, bool errTitle = true, bool details = true)
+		{
+			StringBuilder sb = new StringBuilder();
+			List<Type> err2proc = new List<Type>();
+			if(typ == Type.NUM)
+			{
+				err2proc.Add(Type.Errors);
+				err2proc.Add(Type.Messages);
+			}
+			else if( ((int)typ >= 0) && ((int)typ < (int)Type.NUM))
+			{
+				err2proc.Add(typ);
+			}
+			
+			
+			foreach(Type t in err2proc)
+			{
+				if(errTitle)
+					sb.AppendLine(t.ToString());
+				foreach (ErrorMsg msg in Messages(t))
+				{
+					sb.AppendLine(msg.ToString(details));
+				}
+			}
+
+			return sb.ToString();
+		}
+
 	}
 }
