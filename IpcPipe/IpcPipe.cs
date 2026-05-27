@@ -15,13 +15,15 @@ namespace IpcPipes
 {
 	public class IpcPipe : ErrorMessages.ErrorMessages
 	{
-
+		/// <summary>
+		/// Info per il CTOR di IpcPipe
+		/// </summary>
 		public struct Info
 		{
-			public string writePipe;
-			public string readPipe;
-			public int delay;
-			public bool killInstances;
+			public string writePipe;		// Pipe di scrittura
+			public string readPipe;			// Pipe di lettura
+			public int delay;				// Pausa per polling pipe di lettura
+			public bool killInstances;		// ...
 
 			public Info(string write_pipe, string read_pipe, int delay_ms, bool kill_instances)
 			{
@@ -34,6 +36,10 @@ namespace IpcPipes
 
 		private static int _istanze = 0;							// Numero di istanze
 		private static readonly object _lockObj = new object();		// Oggetto per lock
+
+		#warning USARE UNA LISTA CON: pipe server, pipe client, stream reader, stream writer... usare struct
+		#warning AELLA CONFIGURAZIONE, USARE UNA LISTA DI NOMI DI PIPE, NON STRINGA SINGOLA
+		#warning Aggiungere un timeout per identificare le pipe, creare quelle di scrittura e vedere se esistono quelle di lettura
 
 		NamedPipeServerStream psW;
 		NamedPipeClientStream psR;

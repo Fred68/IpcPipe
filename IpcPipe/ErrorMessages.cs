@@ -10,9 +10,14 @@ namespace ErrorMessages
 {
 
 	#warning CLASSE ErrorMessages da controllare (probabilmente è ok).
+	/// <summary>
+	/// Error messages class
+	/// </summary>
 	public class ErrorMessages
 	{
-		
+		/// <summary>
+		/// Type: message or error
+		/// </summary>
 		public enum Type {Errors = 0,	Messages,	NUM};
 		
 		public static readonly int N_TYPES = (int)Type.NUM-1;
@@ -35,6 +40,9 @@ namespace ErrorMessages
 			}
 		}
 
+		/// <summary>
+		/// CTOR 
+		/// </summary>
 		public ErrorMessages()
 		{
 			_msg = new Stack<ErrorMsg>[N_TYPES];
@@ -44,6 +52,12 @@ namespace ErrorMessages
 			}
 		}
 
+		/// <summary>
+		/// Add a message
+		/// </summary>
+		/// <param name="msg">string</param>
+		/// <param name="dett">string with details</param>
+		/// <param name="typ">error or message</param>
 		public void AddMessage(string msg, string dett = "", Type typ = Type.Messages)
 		{
 			int i = (int)typ;
@@ -53,6 +67,10 @@ namespace ErrorMessages
 			}
 		}
 
+		/// <summary>
+		/// Clear messages
+		/// </summary>
+		/// <param name="typ">errors, messages or both</param>
 		public void ClearMessages(Type typ = Type.NUM)
 		{
 			int i = (int)typ;
@@ -65,6 +83,11 @@ namespace ErrorMessages
 				_msg[i].Clear();
 		}
 
+		/// <summary>
+		/// Enumerator
+		/// </summary>
+		/// <param name="typ">errors, messages or both</param>
+		/// <returns></returns>
 		protected IEnumerable<ErrorMsg> Messages(Type typ = Type.NUM)
 		{
 			int i = (int)typ;
@@ -97,6 +120,11 @@ namespace ErrorMessages
 			return lm;
 		}
 
+		/// <summary>
+		/// Get number of messages
+		/// </summary>
+		/// <param name="typ">errors, messages or both</param>
+		/// <returns></returns>
 		public int GetMessagesNumber(Type typ = Type.NUM)
 		{
 			int n = 0;
@@ -115,6 +143,11 @@ namespace ErrorMessages
 			return n;
 		}
 
+		/// <summary>
+		/// Has messages
+		/// </summary>
+		/// <param name="typ">errors, messages or both</param>
+		/// <returns></returns>
 		public bool HasMessages(Type typ = Type.NUM)
 		{
 			bool hasMsg = false;
@@ -123,11 +156,21 @@ namespace ErrorMessages
 			return hasMsg;
 		}
 
+		/// <summary>
+		/// Has errors
+		/// </summary>
+		/// <returns></returns>
 		public bool HasErrors()
 		{
 			return HasMessages(Type.Errors);
 		}
 
+		/// <summary>
+		/// Get last message
+		/// </summary>
+		/// <param name="typ">error or message</param>
+		/// <param name="detail">with details ?</param>
+		/// <returns></returns>
 		public string GetLastMessage(Type typ = Type.Errors, bool detail = false)
 		{
 			StringBuilder sb = new StringBuilder();
@@ -140,6 +183,13 @@ namespace ErrorMessages
 			return sb.ToString();
 		}
 		
+		/// <summary>
+		/// Get a string with messages
+		/// </summary>
+		/// <param name="typ">errors, messages or both</param>
+		/// <param name="errTitle">Add line indicating errors or messages</param>
+		/// <param name="details">with details ?</param>
+		/// <returns></returns>
 		public string GetMessagesString(Type typ = Type.NUM, bool errTitle = true, bool details = true)
 		{
 			StringBuilder sb = new StringBuilder();
