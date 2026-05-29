@@ -20,7 +20,7 @@ namespace ErrorMessages
 		/// </summary>
 		public enum Type {Errors = 0,	Messages,	NUM};
 		
-		public static readonly int N_TYPES = (int)Type.NUM-1;
+		public static readonly int N_TYPES = (int)Type.NUM;
 		public static readonly string Separator = " - ";
 		
 		protected Stack<ErrorMsg>[] _msg;
@@ -46,7 +46,7 @@ namespace ErrorMessages
 		public ErrorMessages()
 		{
 			_msg = new Stack<ErrorMsg>[N_TYPES];
-			for(int i=0; i < (int)Type.NUM; i++)
+			for(int i=0; i < N_TYPES; i++)
 			{
 				_msg[i] = new Stack<ErrorMsg>();
 			}

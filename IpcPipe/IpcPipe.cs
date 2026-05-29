@@ -38,7 +38,6 @@ namespace IpcPipes
 		private static readonly object _lockObj = new object();		// Oggetto per lock
 
 		#warning USARE UNA LISTA CON: pipe server, pipe client, stream reader, stream writer... usare struct
-		#warning AELLA CONFIGURAZIONE, USARE UNA LISTA DI NOMI DI PIPE, NON STRINGA SINGOLA
 		#warning Aggiungere un timeout per identificare le pipe, creare quelle di scrittura e vedere se esistono quelle di lettura
 
 		NamedPipeServerStream psW;

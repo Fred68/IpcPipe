@@ -30,8 +30,8 @@ namespace IpcPipeM
 		public string COL_buttons;
 
 		// Sezione: Scambio dati
-		public string PIPE_out;
-		public string PIPE_in;
+		public List<string> PIPE_out;
+		public List<string> PIPE_in;
 		public bool PIPE_master;
 
 	}
