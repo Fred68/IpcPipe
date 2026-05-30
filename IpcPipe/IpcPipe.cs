@@ -15,22 +15,26 @@ namespace IpcPipes
 {
 	public class IpcPipe : ErrorMessages.ErrorMessages
 	{
+
+		 
 		/// <summary>
 		/// Info per il CTOR di IpcPipe
 		/// </summary>
 		public struct Info
 		{
+			public bool isMaster;			// Master o slave ?
 			public string writePipe;		// Pipe di scrittura
 			public string readPipe;			// Pipe di lettura
 			public int delay;				// Pausa per polling pipe di lettura
 			public bool killInstances;		// ...
 
-			public Info(string write_pipe, string read_pipe, int delay_ms, bool kill_instances)
+			public Info(bool master, string write_pipe, string read_pipe, int delay_ms, bool kill_instances)
 			{
-				writePipe = write_pipe;
-				readPipe = read_pipe;
-				delay = delay_ms;
-				killInstances = kill_instances;
+				this.isMaster = master;
+				this.writePipe = write_pipe;
+				this.readPipe = read_pipe;
+				this.delay = delay_ms;
+				this.killInstances = kill_instances;
 			}
 		}
 
@@ -52,11 +56,11 @@ namespace IpcPipes
 		/// <exception cref="Exception"></exception>
 		public IpcPipe(Info nfo)
 		{
-			ClearMessages();
-			if(!CheckNuovaIstanza())
-				throw new Exception(GetLastMessage());
-			if(!CreaPipe(nfo))
-				throw new Exception(GetLastMessage());
+			ClearErrMessages();
+			if(!CheckNewInstance())
+				throw new Exception(GetLastErrMessage());
+			if(!CreatePipe(nfo))
+				throw new Exception(GetLastErrMessage());
 		}
 
 
@@ -90,7 +94,7 @@ namespace IpcPipes
 		/// Controlla che ci sia un'istanza unica della classe
 		/// </summary>
 		/// <returns></returns>
-		private bool CheckNuovaIstanza(int nmax = 1)
+		private bool CheckNewInstance(int nmax = 1)
 		{
 			bool ok = true;
 			lock(_lockObj)
@@ -99,7 +103,7 @@ namespace IpcPipes
 			}
 			if(_istanze > nmax)
 			{
-				AddMessage($"Ammesse soltanto N°{nmax} istanze");
+				AddErrMessage($"Ammesse soltanto N°{nmax} istanze");
 				ok = false;
 			}
 			return ok;
@@ -110,7 +114,7 @@ namespace IpcPipes
 		/// </summary>
 		/// <param name="nfo"></param>
 		/// <returns></returns>
-		private bool CreaPipe(Info nfo)
+		private bool CreatePipe(Info nfo)
 		{
 			bool ok = true;
 			try
@@ -121,7 +125,7 @@ namespace IpcPipes
 			catch (Exception ex)
 			{
 				ok = false;
-				AddMessage(ex.Message);
+				AddErrMessage(ex.Message);
 			}
 			return ok;
 		}
