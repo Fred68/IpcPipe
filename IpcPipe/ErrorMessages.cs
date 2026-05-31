@@ -20,8 +20,8 @@ namespace ErrorMessages
 		/// </summary>
 		public enum Type {Errors = 0,	Messages,	NUM};
 		
-		public static readonly int N_TYPES = (int)Type.NUM;
-		public static readonly string Separator = " - ";
+		public static readonly int N_MESSAGE_TYPES = (int)Type.NUM;
+		public static readonly string MESSAGE_SEPARATOR = " - ";
 		
 		protected Stack<ErrorMsg>[] _msg;
 
@@ -36,7 +36,7 @@ namespace ErrorMessages
 			}
 			public string ToString(bool details = false)
 			{
-				return Message + ((details && (Detail.Length > 0)) ? ErrorMessages.Separator : "") + Detail;
+				return Message + ((details && (Detail.Length > 0)) ? ErrorMessages.MESSAGE_SEPARATOR : "") + Detail;
 			}
 		}
 
@@ -45,8 +45,8 @@ namespace ErrorMessages
 		/// </summary>
 		public ErrorMessages()
 		{
-			_msg = new Stack<ErrorMsg>[N_TYPES];
-			for(int i=0; i < N_TYPES; i++)
+			_msg = new Stack<ErrorMsg>[N_MESSAGE_TYPES];
+			for(int i=0; i < N_MESSAGE_TYPES; i++)
 			{
 				_msg[i] = new Stack<ErrorMsg>();
 			}
@@ -58,7 +58,7 @@ namespace ErrorMessages
 		/// <param name="msg">string</param>
 		/// <param name="dett">string with details</param>
 		/// <param name="typ">error or message</param>
-		public void AddMessage(string msg, string dett = "", Type typ = Type.Messages)
+		public void AddErrMessage(string msg, string dett = "", Type typ = Type.Errors)
 		{
 			int i = (int)typ;
 			if( (i>=0) && (i<(int)Type.NUM) )
@@ -71,7 +71,7 @@ namespace ErrorMessages
 		/// Clear messages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
-		public void ClearMessages(Type typ = Type.NUM)
+		public void ClearErrMessages(Type typ = Type.NUM)
 		{
 			int i = (int)typ;
 			if (i == (int)Type.NUM)
@@ -125,7 +125,7 @@ namespace ErrorMessages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
 		/// <returns></returns>
-		public int GetMessagesNumber(Type typ = Type.NUM)
+		public int GetErrMessageNumber(Type typ = Type.NUM)
 		{
 			int n = 0;
 			int i = (int) typ;
@@ -151,7 +151,7 @@ namespace ErrorMessages
 		public bool HasMessages(Type typ = Type.NUM)
 		{
 			bool hasMsg = false;
-			if (GetMessagesNumber(typ) > 0)
+			if (GetErrMessageNumber(typ) > 0)
 				hasMsg = true;
 			return hasMsg;
 		}
@@ -171,7 +171,7 @@ namespace ErrorMessages
 		/// <param name="typ">error or message</param>
 		/// <param name="detail">with details ?</param>
 		/// <returns></returns>
-		public string GetLastMessage(Type typ = Type.Errors, bool detail = false)
+		public string GetLastErrMessage(Type typ = Type.Errors, bool detail = false)
 		{
 			StringBuilder sb = new StringBuilder();
 			int i = (int) typ;
@@ -190,7 +190,7 @@ namespace ErrorMessages
 		/// <param name="errTitle">Add line indicating errors or messages</param>
 		/// <param name="details">with details ?</param>
 		/// <returns></returns>
-		public string GetMessagesString(Type typ = Type.NUM, bool errTitle = true, bool details = true)
+		public string GetErrMessageString(Type typ = Type.NUM, bool errTitle = true, bool details = true)
 		{
 			StringBuilder sb = new StringBuilder();
 			List<Type> err2proc = new List<Type>();
