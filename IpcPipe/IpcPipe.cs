@@ -125,9 +125,9 @@ namespace IpcPipes
 		/// <exception cref="Exception"></exception>
 		public IpcPipe()
 		{
-			ClearMessages();
+			ClearErrMessages();
 			if(!CheckNuovaIstanza())
-				throw new Exception(GetLastMessage());
+				throw new Exception(GetLastErrMessage());
 			_pipes = new List<ProcPipes>();
 		}
 
@@ -171,7 +171,7 @@ namespace IpcPipes
 			}
 			if(_istanze > nmax)
 			{
-				AddMessage($"Ammesse soltanto N°{nmax} istanze");
+				AddErrMessage($"Ammesse soltanto N°{nmax} istanze");
 				ok = false;
 			}
 			return ok;
@@ -199,7 +199,7 @@ namespace IpcPipes
 			catch (Exception ex)
 			{
 				ok = false;
-				AddMessage(ex.Message);
+				AddErrMessage(ex.Message);
 			}
 			return ok;
 		}
