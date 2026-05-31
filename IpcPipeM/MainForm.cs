@@ -33,10 +33,10 @@ namespace IpcPipeM
 			string wpp = Path.GetRandomFileName().Replace(".","");
 			string rpp = Path.GetRandomFileName().Replace(".","");
 
-			IpcPipe.Info nfo = new IpcPipe.Info(wpp,rpp,100,false);
+			IpcPipe.Info nfo = new IpcPipe.Info(wpp,rpp,true,100,false);
 			try
 			{
-				ipc = new IpcPipe(nfo);
+				ipc = new IpcPipe();
 				int inst = ipc.CountKillInstances(nfo.killInstances);
 				if(inst != 1)
 				{

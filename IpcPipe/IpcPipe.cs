@@ -11,6 +11,8 @@ using System.Diagnostics;
 
 // Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 
+#pragma warning disable CS8618     // Disabilita warning per campi non inizializzati (non nullable)                                                                      
+
 namespace IpcPipes
 {
 	public class IpcPipe : ErrorMessages.ErrorMessages
@@ -22,41 +24,111 @@ namespace IpcPipes
 		{
 			public string writePipe;		// Pipe di scrittura
 			public string readPipe;			// Pipe di lettura
+			public bool isMaster;			// Indica se è il master
 			public int delay;				// Pausa per polling pipe di lettura
 			public bool killInstances;		// ...
 
-			public Info(string write_pipe, string read_pipe, int delay_ms, bool kill_instances)
+			public Info(string write_pipe, string read_pipe, bool is_master, int delay_ms, bool kill_instances)
 			{
 				writePipe = write_pipe;
 				readPipe = read_pipe;
+				isMaster = is_master;
 				delay = delay_ms;
 				killInstances = kill_instances;
 			}
 		}
 
+		protected class ProcPipes
+		{
+			bool isMaster;
+			string writePipeName,readPipeName;
+			NamedPipeServerStream psW;
+			NamedPipeClientStream psR;
+			StreamReader sr;
+			StreamWriter sw;
+			
+			public bool IsMaster
+			{
+				get
+				{
+					return isMaster;
+				}
+			}
+			public string WritePipeName
+			{
+				get
+				{
+					return writePipeName;
+				}
+			}
+			public string ReadPipeName
+			{
+				get
+				{
+					return readPipeName;
+				}
+			}
+
+			public NamedPipeServerStream PsW
+			{
+				get {return psW;}
+				set {psW = value;}
+			}
+			public NamedPipeClientStream PsR
+			{
+				get {return psR;}
+				set {psR = value;}
+			}
+			public StreamReader Sr
+			{
+				get
+				{
+					return sr;
+				}
+				set
+				{
+					sr = value;
+				}
+			}
+			public StreamWriter Sw
+			{
+				get
+				{
+					return sw;
+				}
+				set
+				{
+					sw = value;
+				}
+			}
+
+			public ProcPipes(string write_pipe_name, string read_pipe_name, bool is_master)
+			{
+				writePipeName = write_pipe_name;
+				readPipeName = read_pipe_name;
+				isMaster = is_master;
+			}
+
+		}
+
 		private static int _istanze = 0;							// Numero di istanze
-		private static readonly object _lockObj = new object();		// Oggetto per lock
+		private static readonly object _lockObj = new object();     // Oggetto per lock: controllo istanze, accesso alla lista delle pipe
 
-		#warning USARE UNA LISTA CON: pipe server, pipe client, stream reader, stream writer... usare struct
-		#warning Aggiungere un timeout per identificare le pipe, creare quelle di scrittura e vedere se esistono quelle di lettura
+		static List<ProcPipes> _pipes;
 
-		NamedPipeServerStream psW;
-		NamedPipeClientStream psR;
-		static StreamReader sr;
-		static StreamWriter sw;
+#warning Aggiungere un timeout per identificare le pipe, creare quelle di scrittura e vedere se esistono quelle di lettura
+
 
 		/// <summary>
 		/// CTOR
 		/// </summary>
-		/// <param name="nfo">Info nfo con i dati</param>
 		/// <exception cref="Exception"></exception>
-		public IpcPipe(Info nfo)
+		public IpcPipe()
 		{
 			ClearMessages();
 			if(!CheckNuovaIstanza())
 				throw new Exception(GetLastMessage());
-			if(!CreaPipe(nfo))
-				throw new Exception(GetLastMessage());
+			_pipes = new List<ProcPipes>();
 		}
 
 
@@ -110,13 +182,19 @@ namespace IpcPipes
 		/// </summary>
 		/// <param name="nfo"></param>
 		/// <returns></returns>
-		private bool CreaPipe(Info nfo)
+		public bool CreaPipe(Info nfo)
 		{
 			bool ok = true;
+			ProcPipes pp;
 			try
 			{
-				psW = new NamedPipeServerStream(nfo.writePipe,PipeDirection.Out);
-				psR = new NamedPipeClientStream(".",nfo.readPipe,PipeDirection.In);
+				pp = new ProcPipes(nfo.writePipe,nfo.readPipe,nfo.killInstances);
+				pp.PsW = new NamedPipeServerStream(pp.WritePipeName,PipeDirection.Out);
+				pp.PsR = new NamedPipeClientStream(".",pp.ReadPipeName,PipeDirection.In);
+				lock(_lockObj)
+				{
+					_pipes.Add(pp);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -130,3 +208,5 @@ namespace IpcPipes
 
 	}
 }
+
+#pragma warning restore CS8618 
