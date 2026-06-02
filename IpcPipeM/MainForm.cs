@@ -4,7 +4,7 @@ using IpcPipes;
 
 namespace IpcPipeM
 {
-	public partial class MainForm : NcForm
+	public partial class MainForm:NcForm
 	{
 
 		CFG cfg;                            // File di configurazione
@@ -65,13 +65,28 @@ namespace IpcPipeM
 
 		private void button1_Click(object sender,EventArgs e)
 		{
-			if(ipc!=null)
+			if(ipc != null)
 			{
 				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
 				{
 					NcMessageBox.Show(this,ipc.GetLastErrMessage());
 				}
 				NcMessageBox.Show(this,ipc.ToString());
+			}
+		}
+
+		private void button2_Click(object sender,EventArgs e)
+		{
+			if(ipc != null)
+			{
+				if(ipc.ConnectPipe(1))
+				{
+					NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
+				}
+				else
+				{
+					NcMessageBox.Show(this,ipc.GetLastErrMessage());
+				}
 			}
 		}
 	}

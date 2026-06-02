@@ -48,5 +48,21 @@ namespace IpcPipeS
 				MessageBox.Show(ipc.ToString());
 			}
 		}
+
+		private void button2_Click(object sender,EventArgs e)
+		{
+			if(ipc!=null)
+			{
+				if(ipc.ConnectPipe(1))
+				{
+					MessageBox.Show(this,"Connessione riuscita");
+				}
+				else
+				{
+					MessageBox.Show(this,ipc.GetLastErrMessage());
+				}
+
+			}
+		}
 	}
 }

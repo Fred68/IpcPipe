@@ -69,7 +69,12 @@ namespace IpcPipes
 			NamedPipeClientStream psR;
 			StreamReader sr;
 			StreamWriter sw;
-			
+
+#warning Aggiungere timeout alla connessione alle pipe
+#warning Aggiungere handshaking (scambio degli id...)
+#warning Aggiungere processo per lettura continuativa (thread dedicato o async) con evento per i messaggi ricevuti
+
+
 			public int ID
 			{
 				get
@@ -173,8 +178,6 @@ namespace IpcPipes
 		private static List_ID<PipeConnection> _pipes;				// Lista delle connessioni (thread safe)
 
 		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
-
-#warning Funzione per eseguire la connessione alle pipe, con timeout e gestione errori. Controllo esistenza pipe ?
 
 		/// <summary>
 		/// CTOR
@@ -280,6 +283,42 @@ namespace IpcPipes
 			return id;
 		}
 
+		public bool ConnectPipe(int id)
+		{
+			bool ok = false;
+			PipeConnection pp = _pipes.GetByID(id);
+			if(pp.ID != ID_ERROR)
+			{
+				try
+				{
+					if(pp.IsMaster)
+					{
+						pp.PsW.WaitForConnection();
+						pp.PsR.Connect();
+					}
+					else
+					{
+						pp.PsR.Connect();
+						pp.PsW.WaitForConnection();
+					}
+					pp.Sr = new StreamReader(pp.PsR);
+					pp.Sw = new StreamWriter(pp.PsW);
+					pp.Sw.AutoFlush = true;
+					if(pp.Sr == null) {}
+					if(pp.Sw == null) {}
+					ok = true;
+				}
+				catch(Exception ex)
+				{
+					AddErrMessage(ex.Message);
+				}
+			}
+			else
+			{
+				AddErrMessage($"ID {id} non trovato");
+			}
+			return ok;
+		}
 		/// <summary>
 		/// ToString() override
 		/// </summary>

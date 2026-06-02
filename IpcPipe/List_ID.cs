@@ -100,7 +100,7 @@ namespace List_ID
 		/// </summary>
 		/// <param name="id"></param>
 		/// <returns></returns>
-		public T GetbyID(int id)
+		public T GetByID(int id)
 		{
 			T item = new T();
 			item.ID = ID_ERROR;
