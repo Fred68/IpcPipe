@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;				// Pipe		
-using System.Threading;
-
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
+using List_ID;
 
 // Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 
@@ -17,29 +17,52 @@ namespace IpcPipes
 {
 	public class IpcPipe : ErrorMessages.ErrorMessages
 	{
+		public enum InstanceCheck
+		{
+			Unique,							// Ammessa una sola istanza
+			Multiple,						// Ammesse più istanze
+			KillOther,						// Ammessa sola l'ultima istanza, le altre vengono eliminate
+		}
+
 		/// <summary>
 		/// Info per il CTOR di IpcPipe
 		/// </summary>
 		public struct Info
 		{
-			public string writePipe;		// Pipe di scrittura
-			public string readPipe;			// Pipe di lettura
-			public bool isMaster;			// Indica se è il master
-			public int delay;				// Pausa per polling pipe di lettura
-			public bool killInstances;		// ...
+			public string writePipe;				// Pipe di scrittura
+			public string readPipe;					// Pipe di lettura
+			public bool isMaster;					// Indica se è il master
+			public int delay;						// Pausa per polling pipe di lettura
+			public InstanceCheck instanceCheck;		// Controllo istanze
 
-			public Info(string write_pipe, string read_pipe, bool is_master, int delay_ms, bool kill_instances)
+			public Info(string write_pipe, string read_pipe, bool is_master, int delay_ms, InstanceCheck instance_check)
 			{
 				writePipe = write_pipe;
 				readPipe = read_pipe;
 				isMaster = is_master;
 				delay = delay_ms;
-				killInstances = kill_instances;
+				instanceCheck = instance_check;
+			}
+
+			public override string ToString()
+			{
+				StringBuilder strb = new StringBuilder();
+				string mst = isMaster ? "Master" : "Slave";
+				strb.AppendLine($"IsMaster: {mst}");
+				strb.AppendLine($"WritePipe: {writePipe}");
+				strb.AppendLine($"ReadPipe: {readPipe}");	
+				strb.AppendLine($"Delay: {delay}");
+				strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
+				return strb.ToString();
 			}
 		}
 
-		protected class ProcPipes
+		/// <summary>
+		/// Connessione bidirezionale con pipe
+		/// </summary>
+		protected class PipeConnection : I_ID
 		{
+			int _id;
 			bool isMaster;
 			string writePipeName,readPipeName;
 			NamedPipeServerStream psW;
@@ -47,6 +70,17 @@ namespace IpcPipes
 			StreamReader sr;
 			StreamWriter sw;
 			
+			public int ID
+			{
+				get
+				{
+					return _id;
+				}
+				set
+				{
+					_id = value;
+				}
+			}
 			public bool IsMaster
 			{
 				get
@@ -101,23 +135,46 @@ namespace IpcPipes
 					sw = value;
 				}
 			}
-
-			public ProcPipes(string write_pipe_name, string read_pipe_name, bool is_master)
+			
+			/// <summary>
+			/// CTOR
+			/// </summary>
+			/// <param name="write_pipe_name"></param>
+			/// <param name="read_pipe_name"></param>
+			/// <param name="is_master"></param>
+			public PipeConnection(string write_pipe_name, string read_pipe_name, bool is_master)
 			{
 				writePipeName = write_pipe_name;
 				readPipeName = read_pipe_name;
 				isMaster = is_master;
 			}
 
+			public PipeConnection()
+			{
+				ID = ID_ERROR;
+			}
+			public override string ToString()
+			{
+				StringBuilder strb = new StringBuilder();
+				strb.AppendLine($"ID: {_id}");
+				string mst = isMaster ? "Master" : "Slave";
+				strb.AppendLine($"IsMaster: {mst}");
+				strb.AppendLine($"WritePipe: {WritePipeName}");
+				strb.AppendLine($"ReadPipe: {ReadPipeName}");	
+				//strb.AppendLine($"Delay: {delay}");
+				//strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
+				return strb.ToString();
+			}
+
 		}
 
 		private static int _istanze = 0;							// Numero di istanze
-		private static readonly object _lockObj = new object();     // Oggetto per lock: controllo istanze, accesso alla lista delle pipe
+		private static readonly object _lockObj = new object();		// Oggetto per lock: controllo istanze
+		private static List_ID<PipeConnection> _pipes;				// Lista delle connessioni (thread safe)
 
-		static List<ProcPipes> _pipes;
+		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
 
-#warning Aggiungere un timeout per identificare le pipe, creare quelle di scrittura e vedere se esistono quelle di lettura
-
+#warning Funzione per eseguire la connessione alle pipe, con timeout e gestione errori. Controllo esistenza pipe ?
 
 		/// <summary>
 		/// CTOR
@@ -128,34 +185,61 @@ namespace IpcPipes
 			ClearErrMessages();
 			if(!CheckNuovaIstanza())
 				throw new Exception(GetLastErrMessage());
-			_pipes = new List<ProcPipes>();
+			_pipes = new List_ID<PipeConnection>();
 		}
 
 
 		/// <summary>
-		/// Conta le istanze del processo
-		/// Elimina le altre, se richiesto
+		/// Controlla le istanze del processo
 		/// </summary>
-		/// <param name="kill_other"></param>
+		/// <param name="instance_check">InstanceCheck. Multiple / Unique / KillOther</param>
 		/// <returns></returns>
-		public int CountKillInstances(bool kill_other = false)
+		public bool CheckInstances(InstanceCheck instance_check = IpcPipe.InstanceCheck.Multiple)
 		{
+			bool ok = false;
 			int count = 0;
 			Process current = Process.GetCurrentProcess();
 			Process[] processes = Process.GetProcessesByName(current.ProcessName);
 			count = processes.Length;
-			if(kill_other)
+
+			switch(instance_check)
 			{
-				foreach(Process process in processes)
-				{
-					if(process.Id != current.Id)
+				case InstanceCheck.Multiple:
+					ok = true;
+					break;
+				case InstanceCheck.Unique:
+					if(count > 1)
 					{
-						process.Kill();
-						count--;
+						AddErrMessage("Ammessa una sola istanza");
 					}
-				}
+					else
+					{
+						ok = true;
+					}
+					break;
+				case InstanceCheck.KillOther:
+					if(count > 1)
+					{
+						foreach(Process process in processes)
+						{
+							if(process.Id != current.Id)
+							{
+								process.Kill();
+								count--;
+							}
+						}
+					}
+					if(count > 1)
+						{
+						AddErrMessage("Non è stato possibile eliminare tutte le altre istanze");
+						}
+					else
+					{
+						ok = true;
+					}
+					break;
 			}
-			return count;
+			return ok;
 		}
 
 		/// <summary>
@@ -177,35 +261,40 @@ namespace IpcPipes
 			return ok;
 		}
 
-		/// <summary>
-		/// Crea le pipe
-		/// </summary>
-		/// <param name="nfo"></param>
-		/// <returns></returns>
-		public bool CreaPipe(Info nfo)
+		public int CreatePipeConnection(Info nfo)
 		{
-			bool ok = true;
-			ProcPipes pp;
+			int id = ID_ERROR;
+			PipeConnection pp;
 			try
 			{
-				pp = new ProcPipes(nfo.writePipe,nfo.readPipe,nfo.killInstances);
+				pp = new PipeConnection(nfo.writePipe,nfo.readPipe,nfo.isMaster);
 				pp.PsW = new NamedPipeServerStream(pp.WritePipeName,PipeDirection.Out);
 				pp.PsR = new NamedPipeClientStream(".",pp.ReadPipeName,PipeDirection.In);
-				lock(_lockObj)
-				{
-					_pipes.Add(pp);
-				}
+				id = _pipes.Add(pp);
 			}
 			catch (Exception ex)
 			{
-				ok = false;
+				id = ID_ERROR;
 				AddErrMessage(ex.Message);
 			}
-			return ok;
+			return id;
 		}
 
-		
-
+		/// <summary>
+		/// ToString() override
+		/// </summary>
+		/// <returns></returns>
+		public override string ToString()
+		{
+			StringBuilder strb = new StringBuilder();
+			strb.AppendLine($"Numero istanze: {_istanze}");
+			strb.AppendLine($"Numero pipe: {_pipes.Count}");
+			foreach(PipeConnection pp in _pipes)
+			{
+				strb.AppendLine(pp.ToString());
+			}
+			return strb.ToString();
+		}
 	}
 }
 

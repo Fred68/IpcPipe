@@ -4,13 +4,14 @@ using IpcPipes;
 
 namespace IpcPipeM
 {
-	public partial class MainForm:NcForm
+	public partial class MainForm : NcForm
 	{
 
 		CFG cfg;                            // File di configurazione
 		static Form? formRef;               // Riferimento statico a Form1
 		bool errorOnLoad;                   // Errore durante OnLoad()
 
+		IpcPipe.Info nfo;                    // Info per IpcPipe
 		IpcPipe ipc;
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
@@ -30,20 +31,16 @@ namespace IpcPipeM
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 
-			string wpp = Path.GetRandomFileName().Replace(".","");
-			string rpp = Path.GetRandomFileName().Replace(".","");
-
-			IpcPipe.Info nfo = new IpcPipe.Info(wpp,rpp,true,100,false);
+			nfo = new IpcPipe.Info(cfg.PIPE_out[0],cfg.PIPE_in[0],cfg.PIPE_master,100,IpcPipe.InstanceCheck.Unique);
+			// I nomi delle pipe erano: Path.GetRandomFileName().Replace(".","");
 
 			try
 			{
 				ipc = new IpcPipe();
-				int inst = ipc.CountKillInstances(nfo.killInstances);
-				if(inst != 1)
+				if(!ipc.CheckInstances(nfo.instanceCheck))
 				{
-					throw new Exception("Ammessa solo un'istanza del processo");
+					throw new Exception(ipc.GetLastErrMessage());
 				}
-				
 			}
 			catch(Exception ex)
 			{
@@ -64,6 +61,18 @@ namespace IpcPipeM
 		private void MainForm_Shown(object sender,EventArgs e)
 		{
 			int x = 1;
+		}
+
+		private void button1_Click(object sender,EventArgs e)
+		{
+			if(ipc!=null)
+			{
+				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
+				{
+					NcMessageBox.Show(this,ipc.GetLastErrMessage());
+				}
+				NcMessageBox.Show(this,ipc.ToString());
+			}
 		}
 	}
 }
