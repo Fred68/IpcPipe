@@ -69,9 +69,10 @@ namespace IpcPipes
 			NamedPipeClientStream psR;
 			StreamReader sr;
 			StreamWriter sw;
+			bool isSync;
 
 #warning Aggiungere timeout alla connessione alle pipe
-#warning Aggiungere handshaking (scambio degli id...)
+#warning Aggiungere handshaking (scambio degli id...), da inserire come other_id.
 #warning Aggiungere processo per lettura continuativa (thread dedicato o async) con evento per i messaggi ricevuti
 
 
@@ -105,6 +106,17 @@ namespace IpcPipes
 				get
 				{
 					return readPipeName;
+				}
+			}
+			public bool IsSync
+			{
+				get
+				{
+					return isSync;
+				}
+				set
+				{
+					isSync = value;
 				}
 			}
 
@@ -152,11 +164,13 @@ namespace IpcPipes
 				writePipeName = write_pipe_name;
 				readPipeName = read_pipe_name;
 				isMaster = is_master;
+				isSync = false;
 			}
 
 			public PipeConnection()
 			{
 				ID = ID_ERROR;
+				isSync = false;
 			}
 			public override string ToString()
 			{
@@ -166,6 +180,7 @@ namespace IpcPipes
 				strb.AppendLine($"IsMaster: {mst}");
 				strb.AppendLine($"WritePipe: {WritePipeName}");
 				strb.AppendLine($"ReadPipe: {ReadPipeName}");	
+				strb.AppendLine($"IsSync: {isSync}");
 				//strb.AppendLine($"Delay: {delay}");
 				//strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
 				return strb.ToString();
@@ -178,6 +193,9 @@ namespace IpcPipes
 		private static List_ID<PipeConnection> _pipes;				// Lista delle connessioni (thread safe)
 
 		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
+		public static string STR_SYNC1 = "Sync_1";					// Primo e...
+		public static string STR_SYNC2 = "Null_2";					// ...secondo messaggio di prova per la sincronizzazione
+
 
 		/// <summary>
 		/// CTOR
@@ -264,6 +282,11 @@ namespace IpcPipes
 			return ok;
 		}
 
+		/// <summary>
+		/// Crea una connessione pipe e la aggiunge alla lista delle connessioni
+		/// </summary>
+		/// <param name="nfo"></param>
+		/// <returns>L'ID (int) della connessione oppure ID_ERROR in caso di errore</returns>
 		public int CreatePipeConnection(Info nfo)
 		{
 			int id = ID_ERROR;
@@ -283,6 +306,10 @@ namespace IpcPipes
 			return id;
 		}
 
+		/// <summary>
+		/// Connette le pipe con numero ID alla controparte (master o slave) e crea gli stream reader/writer /// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		public bool ConnectPipe(int id)
 		{
 			bool ok = false;
@@ -323,6 +350,88 @@ namespace IpcPipes
 		/// ToString() override
 		/// </summary>
 		/// <returns></returns>
+		
+		public bool Sync(int id)
+		{
+			bool ok = false;
+			PipeConnection pp = _pipes.GetByID(id);
+			if(pp.ID != ID_ERROR)
+			{
+				string msg1, msg2;
+				msg1 = msg2 = string.Empty;
+				if(pp.IsMaster)                     // Se è master, invia un messaggio di prova e attende la risposta dallo slave, che deve essere identica
+				{
+					msg1 = STR_SYNC1;
+					try
+					{
+						pp.Sw.WriteLine(msg1);
+						msg2 = pp.Sr.ReadLine();
+						if(msg2 != null)
+						{
+							if(msg1 == msg2)			// Se la connessione è sincronizzata (lato master)...
+							{
+								pp.Sw.WriteLine(STR_SYNC1);		// ...riconferma allo slave.
+								ok = true;
+							}
+							else
+							{
+								AddErrMessage($"Messaggio di risposta non corrispondente: '{msg1}!={msg2}'");
+							}
+						}
+						else
+						{
+							AddErrMessage("Messaggio di risposta nullo");
+						}
+
+					}
+					catch(Exception ex)
+					{
+						AddErrMessage(ex.Message);
+					}
+				}
+				else
+				{										// Se è slave, attende un messaggio di prova dallo master.
+					string msg;
+					msg = pp.Sr.ReadLine();
+					if(msg == null)
+					{
+						pp.Sw.WriteLine(STR_SYNC2);     // Se il messaggio è nullo, invia un messaggio diverso per far fallire la sincronizzazione
+					}
+					else
+					{
+						pp.Sw.WriteLine(msg);			// Se il messaggio è valido, lo rimanda al master per la verifica.
+						
+						msg = string.Empty;
+						msg = pp.Sr.ReadLine();			// Poi attenda la conferma dal master.
+
+						if(msg != null)
+						{
+							if(msg == STR_SYNC1)        // Se la conferma è valida, la sincronizzazione è avvenuta con successo.
+							{
+								ok = true;
+							}
+							else
+							{
+								AddErrMessage($"Messaggio di conferma non corrispondente: '{STR_SYNC2}!={msg}'");
+							}
+						}
+						else
+						{
+							AddErrMessage("Messaggio di conferma nullo");
+						}
+					}
+					
+				}
+				pp.IsSync = ok;                 // Imposta lo stato di sincronizzazione della connessione
+			}
+			else
+			{
+				AddErrMessage($"ID {id} non trovato");
+			}
+
+			return ok;
+		}
+		
 		public override string ToString()
 		{
 			StringBuilder strb = new StringBuilder();

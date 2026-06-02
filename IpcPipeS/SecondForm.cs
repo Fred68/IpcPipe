@@ -56,6 +56,15 @@ namespace IpcPipeS
 				if(ipc.ConnectPipe(1))
 				{
 					MessageBox.Show(this,"Connessione riuscita");
+
+					if(ipc.Sync(1))
+					{
+						MessageBox.Show(this,"Sync riuscita");
+					}
+					else
+					{
+						MessageBox.Show(this,ipc.GetLastErrMessage());
+					}
 				}
 				else
 				{

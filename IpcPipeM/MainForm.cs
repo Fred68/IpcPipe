@@ -82,6 +82,15 @@ namespace IpcPipeM
 				if(ipc.ConnectPipe(1))
 				{
 					NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
+
+					if(ipc.Sync(1))
+					{
+						NcMessageBox.Show(this,"Sync riuscita.");
+					}
+					else
+					{
+						NcMessageBox.Show(this,ipc.GetLastErrMessage());
+					}
 				}
 				else
 				{
