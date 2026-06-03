@@ -67,9 +67,10 @@ namespace IpcPipeM
 		{
 			if(ipc != null)
 			{
+				ipc.ClearErrMessages();
 				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
 				{
-					NcMessageBox.Show(this,ipc.GetLastErrMessage());
+					NcMessageBox.Show(this,ipc.GetErrMessageString());
 				}
 				NcMessageBox.Show(this,ipc.ToString());
 			}
@@ -79,6 +80,7 @@ namespace IpcPipeM
 		{
 			if(ipc != null)
 			{
+				ipc.ClearErrMessages();
 				if(ipc.ConnectPipe(1))
 				{
 					NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
@@ -89,12 +91,12 @@ namespace IpcPipeM
 					}
 					else
 					{
-						NcMessageBox.Show(this,ipc.GetLastErrMessage());
+						NcMessageBox.Show(this,ipc.GetErrMessageString());
 					}
 				}
 				else
 				{
-					NcMessageBox.Show(this,ipc.GetLastErrMessage());
+					NcMessageBox.Show(this,ipc.GetErrMessageString());
 				}
 			}
 		}

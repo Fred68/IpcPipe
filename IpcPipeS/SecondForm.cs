@@ -43,7 +43,7 @@ namespace IpcPipeS
 			{
 				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
 				{
-					MessageBox.Show(this,ipc.GetLastErrMessage());
+					MessageBox.Show(this,ipc.GetErrMessageString());
 				}
 				MessageBox.Show(ipc.ToString());
 			}
@@ -63,12 +63,12 @@ namespace IpcPipeS
 					}
 					else
 					{
-						MessageBox.Show(this,ipc.GetLastErrMessage());
+						MessageBox.Show(this,ipc.GetErrMessageString());
 					}
 				}
 				else
 				{
-					MessageBox.Show(this,ipc.GetLastErrMessage());
+					MessageBox.Show(this,ipc.GetErrMessageString());
 				}
 
 			}
