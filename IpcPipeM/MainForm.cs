@@ -31,13 +31,19 @@ namespace IpcPipeM
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 
-			nfo = new IpcPipe.Info(cfg.PIPE_out[0],cfg.PIPE_in[0],cfg.PIPE_master,100,IpcPipe.InstanceCheck.Unique);
-			// I nomi delle pipe erano: Path.GetRandomFileName().Replace(".","");
+			nfo = new IpcPipe.Info(	cfg.PIPE_out[0],
+									cfg.PIPE_in[0],
+									cfg.PIPE_master,
+			#warning Impostare il delay da configurazione
+									100,
+									IpcPipe.InstanceCheck.Unique
+									);	// Path.GetRandomFileName().Replace(".","") 
 
 			try
 			{
-				ipc = new IpcPipe();
-				if(!ipc.CheckInstances(nfo.instanceCheck))
+				ipc = new IpcPipe(SegnalaStatCiclo);
+
+				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
 					throw new Exception(ipc.GetLastErrMessage());
 				}
@@ -61,6 +67,12 @@ namespace IpcPipeM
 		private void MainForm_Shown(object sender,EventArgs e)
 		{
 			int x = 1;
+		}
+
+
+		public void SegnalaStatCiclo(bool stat)
+		{
+			NcMessageBox.Show(this,"Ciclo " + (stat ? "abilitato" : "disabilitato"));
 		}
 
 		private void button1_Click(object sender,EventArgs e)

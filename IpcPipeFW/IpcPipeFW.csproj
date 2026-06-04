@@ -50,6 +50,9 @@
     <Compile Include="..\IpcPipe\IpcPipe.cs">
       <Link>IpcPipe.cs</Link>
     </Compile>
+    <Compile Include="..\IpcPipe\IpcPipe_Ciclo.cs">
+      <Link>IpcPipe_Ciclo.cs</Link>
+    </Compile>
     <Compile Include="..\IpcPipe\List_ID.cs">
       <Link>List_ID.cs</Link>
     </Compile>

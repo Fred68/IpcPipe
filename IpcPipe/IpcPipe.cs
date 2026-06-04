@@ -15,7 +15,14 @@ using List_ID;
 
 namespace IpcPipes
 {
-	public class IpcPipe : ErrorMessages.ErrorMessages
+	/// <summary>
+	/// Delegate per segnalare esternamente l'abilitazione/disabilitazione del ciclo di lettura
+	/// </summary>
+	/// <param name="stat"></param>
+	public delegate void DelegateBool(bool stat);
+
+
+	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
 		public enum InstanceCheck
 		{
@@ -60,7 +67,7 @@ namespace IpcPipes
 		/// <summary>
 		/// Connessione bidirezionale con pipe
 		/// </summary>
-		protected class PipeConnection : I_ID
+		public class PipeConnection : I_ID
 		{
 			int _id;
 			bool isMaster;
@@ -72,8 +79,8 @@ namespace IpcPipes
 			bool isSync;
 			int _id_other;
 
-#warning Aggiungere timeout alla connessione alle pipe
-#warning Aggiungere processo per lettura continuativa (thread dedicato o async) con evento per i messaggi ricevuti
+
+#warning Aggiungere processo per lettura continuativa (thread dedicato) con evento per i messaggi ricevuti
 
 
 			public int ID
@@ -201,6 +208,8 @@ namespace IpcPipes
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
+		static DelegateBool segnalaCiclo;                                   // Delegate per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+
 
 		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
 		public static string STR_SYNC = "Sync";								// Stringa di prova per la sincronizzazione
@@ -211,21 +220,36 @@ namespace IpcPipes
 		/// CTOR
 		/// </summary>
 		/// <exception cref="Exception"></exception>
-		public IpcPipe()
+		public IpcPipe(DelegateBool segnala_ciclo)
 		{
 			ClearErrMessages();
-			if(!CheckNuovaIstanza())
+			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
+			segnalaCiclo = segnala_ciclo;
 		}
 
+		/// <summary>
+		/// Iteratore per le connessioni pipe (thread safe)
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<PipeConnection> Pipes()
+		{
+			lock(_lockObj)
+			{
+				foreach(PipeConnection pp in _pipes)
+				{
+					yield return pp;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Controlla le istanze del processo
 		/// </summary>
 		/// <param name="instance_check">InstanceCheck. Multiple / Unique / KillOther</param>
 		/// <returns></returns>
-		public bool CheckInstances(InstanceCheck instance_check = IpcPipe.InstanceCheck.Multiple)
+		public bool CheckProcInstances(InstanceCheck instance_check = IpcPipe.InstanceCheck.Multiple)
 		{
 			bool ok = false;
 			int count = 0;
@@ -277,16 +301,16 @@ namespace IpcPipes
 		/// Controlla che ci sia un'istanza unica della classe
 		/// </summary>
 		/// <returns></returns>
-		private bool CheckNuovaIstanza(int nmax = 1)
+		private bool CheckUniquenClassIstance()
 		{
 			bool ok = true;
 			lock(_lockObj)
 			{
 				_istanze++;
 			}
-			if(_istanze > nmax)
+			if(_istanze > 1)
 			{
-				AddErrMessage($"Ammesse soltanto N°{nmax} istanze");
+				AddErrMessage($"Ammessa soltanto un'istanza della classe");
 				ok = false;
 			}
 			return ok;
@@ -317,7 +341,9 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Connette le pipe con numero ID alla controparte (master o slave) e crea gli stream reader/writer /// </summary>
+		/// Connette le pipe con numero ID alla controparte (master o slave) e crea gli stream reader/writer
+		/// Le funzioni non prevedono un timeout (a meno di usar la versione asincrona)
+		/// /// </summary>
 		/// <param name="id"></param>
 		/// <returns></returns>
 		public bool ConnectPipe(int id)

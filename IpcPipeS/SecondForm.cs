@@ -24,8 +24,9 @@ namespace IpcPipeS
 			nfo = new IpcPipe.Info(cfg.PIPE_out[0],cfg.PIPE_in[0],cfg.PIPE_master,1200,IpcPipe.InstanceCheck.KillOther);
 			try
 			{
-				ipc = new IpcPipe();
-				if(!ipc.CheckInstances(nfo.instanceCheck))
+				ipc = new IpcPipe(SegnalaStatCiclo);
+
+				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
 					throw new Exception(ipc.GetLastErrMessage());
 				}
@@ -35,6 +36,11 @@ namespace IpcPipeS
 				MessageBox.Show(this,ex.Message);
 				Close();
 			}
+		}
+
+		public void SegnalaStatCiclo(bool stat)
+		{
+			MessageBox.Show("Ciclo " + (stat ? "abilitato" : "disabilitato"));
 		}
 
 		private void button1_Click(object sender,EventArgs e)

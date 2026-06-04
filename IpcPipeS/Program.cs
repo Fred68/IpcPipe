@@ -12,8 +12,6 @@ using Fred68.CfgReader;
 namespace IpcPipeS
 {
 
-	#warning GESTIRE LA CREAZIONE E LA CONNESSIONE ALLE PIPE CON DEI CICLI
-
 	internal static class Program
 	{
 
