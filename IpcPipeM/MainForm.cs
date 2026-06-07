@@ -7,12 +7,15 @@ namespace IpcPipeM
 	public partial class MainForm:NcForm
 	{
 
-		CFG cfg;                            // File di configurazione
-		static Form? formRef;               // Riferimento statico a Form1
-		bool errorOnLoad;                   // Errore durante OnLoad()
+		CFG cfg;										// File di configurazione
+		static Form? formRef;							// Riferimento statico a Form1
+		bool errorOnLoad;								// Errore durante OnLoad()
 
-		IpcPipe.Info nfo;                    // Info per IpcPipe
+		IpcPipe.Info nfo;								// Info per IpcPipe
 		IpcPipe ipc;
+
+		int idConn_to_slave = IpcPipe.ID_ERROR;			// Id della prima connessione
+
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
 		{
@@ -38,7 +41,7 @@ namespace IpcPipeM
 									100,
 									IpcPipe.InstanceCheck.Unique
 									);	// Path.GetRandomFileName().Replace(".","") 
-
+			
 			try
 			{
 				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
@@ -53,6 +56,8 @@ namespace IpcPipeM
 				NcMessageBox.Show(this,ex.Message);
 				Close();
 			}
+
+			
 		}
 
 		private void MainForm_Load(object sender,EventArgs e)
@@ -80,12 +85,17 @@ namespace IpcPipeM
 			NcMessageBox.Show(this,"Ciclo arrestato");
 		}
 
+
+
 		private void button1_Click(object sender,EventArgs e)
 		{
 			if(ipc != null)
 			{
 				ipc.ClearErrMessages();
-				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
+				
+				idConn_to_slave = ipc.CreatePipeConnection(nfo);			// Crea una connessione e memorizza l'ID
+
+				if(idConn_to_slave == IpcPipe.ID_ERROR)
 				{
 					NcMessageBox.Show(this,ipc.GetErrMessageString());
 				}

@@ -17,6 +17,8 @@ namespace IpcPipeS
 		IpcPipe.Info nfo;
 		IpcPipe ipc;
 
+		int idConn_to_master = IpcPipe.ID_ERROR;
+
 		public SecondForm(CFGfw cfg)
 		{
 			InitializeComponent();
@@ -52,7 +54,9 @@ namespace IpcPipeS
 		{
 			if(ipc!=null)
 			{
-				if(ipc.CreatePipeConnection(nfo) == IpcPipe.ID_ERROR)
+				idConn_to_master = ipc.CreatePipeConnection(nfo);
+
+				if(idConn_to_master == IpcPipe.ID_ERROR)
 				{
 					MessageBox.Show(this,ipc.GetErrMessageString());
 				}

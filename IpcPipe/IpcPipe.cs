@@ -36,26 +36,28 @@ namespace IpcPipes
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
-		
 
 		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
 		static DelegateNull segnalaFineCiclo;								// Chiamata dopo l'arresto del ciclo di lettura
 
-
 		Thread pipeReaderThread;											// Thread di lettura
-		static bool _cicloAbilitato;										// Attivato thread di lettura delle pipe
-		//static string pacchetto;											// Pacchetto da elaborare
-
+		static bool _cicloAbilitato;                                        // Attivato thread di lettura delle pipe
 
 		/********************************************/
 		// Messaggi di sincronizzazione
 		/********************************************/
+		#region MESSAGGI DI SINCRONIZZAZIONE
 		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione		
 		public static string STR_SYNC = "Sync";								// Stringa di prova per la sincronizzazione
 		public static string STR_SYNC_ERR = "Error";						// Stringa di errore
-		public static char CHR_SEP = '|';									// Carattere separatore per i messaggi
+		public static char CHR_SEP = '|';                                   // Carattere separatore per i messaggi
+		#endregion
 
 
+		/********************************************/
+		// Proprietà
+		/********************************************/
+		#region PROPRIETA'
 		/// <summary>
 		/// Ciclo (thread di lettura) abilitato
 		/// </summary>
@@ -74,7 +76,11 @@ namespace IpcPipes
 				}
 			}
 		}
+		#endregion
 
+		/********************************************/
+		// CTOR
+		/********************************************/
 		/// <summary>
 		/// CTOR
 		/// </summary>
@@ -88,6 +94,12 @@ namespace IpcPipes
 			if(!CreaCiclo(segnala_ciclo, segnala_fine_ciclo))				// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
 		}
+
+
+		/********************************************/
+		// Funzion membro private o protette
+		/********************************************/
+		#region PRIVATE
 
 		/// <summary>
 		/// Iteratore per le connessioni pipe (thread safe)
@@ -104,6 +116,69 @@ namespace IpcPipes
 				}
 			}
 		}
+
+		/// <summary>
+		/// Controlla che ci sia un'istanza unica della classe
+		/// </summary>
+		/// <returns></returns>
+		bool CheckUniquenClassIstance()
+		{
+			bool ok = true;
+			lock(_lockObj)
+			{
+				_istanze++;
+			}
+			if(_istanze > 1)
+			{
+				AddErrMessage($"Ammessa soltanto un'istanza della classe");
+				ok = false;
+			}
+			return ok;
+		}
+
+		/// <summary>
+		/// Ottiene l'ID (int) da un messaggio di sincronizzazione, se il messaggio è valido. Altrimenti restituisce ID_ERROR
+		/// Il messaggio deve essere costituito da STR_SYNC + CHR_SEPID
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <returns></returns>
+		static int IdFromSyncMsg(string msg)
+		{
+			int id = ID_ERROR;
+			if(msg.StartsWith(STR_SYNC))
+			{
+				int sep_pos = msg.IndexOf(CHR_SEP);
+				if(sep_pos > 0 && sep_pos < msg.Length - 1)
+				{
+					string id_str = msg.Substring(sep_pos + 1);
+					if(!int.TryParse(id_str,out id))
+					{
+						id = ID_ERROR;
+					}
+				}
+			}
+			return id;
+		}
+
+		/// <summary>
+		/// Crea un messaggio di sincronizzazione con l'ID specificato, nel formato STR_SYNC + CHR_SEP + ID
+		/// </summary>
+		/// <param name="id"></param>
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		static string SyncMsgFromId(int id)
+		{
+			return STR_SYNC + CHR_SEP + id.ToString();
+		}
+
+
+		#endregion
+
+
+		/********************************************/
+		// Funzion membro pubbliche
+		/********************************************/
 
 		/// <summary>
 		/// Controlla le istanze del processo
@@ -158,24 +233,6 @@ namespace IpcPipes
 			return ok;
 		}
 
-		/// <summary>
-		/// Controlla che ci sia un'istanza unica della classe
-		/// </summary>
-		/// <returns></returns>
-		bool CheckUniquenClassIstance()
-		{
-			bool ok = true;
-			lock(_lockObj)
-			{
-				_istanze++;
-			}
-			if(_istanze > 1)
-			{
-				AddErrMessage($"Ammessa soltanto un'istanza della classe");
-				ok = false;
-			}
-			return ok;
-		}
 
 		/// <summary>
 		/// Crea una connessione pipe e la aggiunge alla lista delle connessioni
@@ -202,11 +259,11 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Connette le pipe con numero ID alla controparte (master o slave) e crea gli stream reader/writer
+		/// Connette le pipe con numero 'id' alla controparte (master o slave) e crea gli stream reader/writer
 		/// Le funzioni non prevedono un timeout (a meno di usar la versione asincrona)
 		/// /// </summary>
 		/// <param name="id"></param>
-		/// <returns></returns>
+		/// <returns>true se connessione riuscita, false se fallita</returns>
 		public bool ConnectPipe(int id)
 		{
 			bool ok = false;
@@ -252,9 +309,10 @@ namespace IpcPipes
 		}
 		
 		/// <summary>
-		/// Sincronizza e scambia gli ID delle connessioni 
+		/// Sincronizza le connessioni master e slave, scambiando i rispettivi 'id'
+		/// Le connessioni vengono riconosciute dal nome delle pipe
 		/// </summary>
-		/// <param name="id"></param>
+		/// <param name="id">id della connessione</param>
 		/// <returns></returns>
 		public bool Sync(int id)
 		{
@@ -339,46 +397,10 @@ namespace IpcPipes
 			}
 
 			pp.IsSync = ok;                 // Imposta lo stato di sincronizzazione della connessione
-			
-			
+				
 			return ok;
 		}
 
-		/// <summary>
-		/// Ottiene l'ID (int) da un messaggio di sincronizzazione, se il messaggio è valido. Altrimenti restituisce ID_ERROR
-		/// Il messaggio deve essere costituito da STR_SYNC + CHR_SEPID
-		/// </summary>
-		/// <param name="msg"></param>
-		/// <returns></returns>
-		public static int IdFromSyncMsg(string msg)
-		{
-			int id = ID_ERROR;
-			if(msg.StartsWith(STR_SYNC))
-			{
-				int sep_pos = msg.IndexOf(CHR_SEP);
-				if(sep_pos > 0 && sep_pos < msg.Length - 1)
-				{
-					string id_str = msg.Substring(sep_pos + 1);
-					if(!int.TryParse(id_str,out id))
-					{
-						id = ID_ERROR;
-					}
-				}
-			}
-			return id;
-		}
-
-		/// <summary>
-		/// Crea un messaggio di sincronizzazione con l'ID specificato, nel formato STR_SYNC + CHR_SEP + ID
-		/// </summary>
-		/// <param name="id"></param>
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public static string SyncMsgFromId(int id)
-		{
-			return STR_SYNC + CHR_SEP + id.ToString();
-		}
 
 		/// <summary>
 		/// ToString() override
@@ -398,7 +420,8 @@ namespace IpcPipes
 
 
 		#warning AGGIUNGERE GESTIONE DEI DIZIONARI (id, nome comando, delegate...)
-		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprirtà è abbastanza generico
+		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
+		#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
 	}
 }
 

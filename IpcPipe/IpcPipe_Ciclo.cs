@@ -15,8 +15,8 @@ namespace IpcPipes
 		/* Formato dati su stream:
 		
 				START_PK			inizio pacchetto					
-				iPk					tipo di pacchetto
-				dati...
+				iPk					tipo di pacchetto (intero)
+				dati...				in formato json
 				END_PK				fine pacchetto
 
 				START_PK

@@ -73,7 +73,19 @@ namespace IpcPipes
 			bool isSync;
 			int _id_other;
 		
-			#warning AGGIUNGERE DIZIONARIO CON: ID, Parola chiave, delegate
+			#warning AGGIUNGERE DIZIONARIO CON: ID, Parola chiave, delegate. Chiave ? int è più veloce.
+			
+			#warning DEFINIRE BENE I DATI PER I DIZIONARI.
+			/*
+					
+					ipk				int: chiave con il tipo di pacchetto
+					string			descrizione del tipo di pacchetto
+					delegate...		funzione che elabora il contenuto del pacchetto (da definire se funzione generica o no)
+									Usare DictionaryEntry base e poi derivate DictionaryEntry<T> ??? Soluzione più flessibile
+
+
+
+			*/
 			
 
 			/// <summary>
@@ -201,7 +213,6 @@ namespace IpcPipes
 					sw = value;
 				}
 			}
-			
 			
 
 
