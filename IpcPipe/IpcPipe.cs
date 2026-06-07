@@ -16,224 +16,85 @@ using List_ID;
 namespace IpcPipes
 {
 	/// <summary>
-	/// Delegate per segnalare esternamente l'abilitazione/disabilitazione del ciclo di lettura
+	/// Delegate con argomento bool
 	/// </summary>
 	/// <param name="stat"></param>
 	public delegate void DelegateBool(bool stat);
-
+	/// <summary>
+	/// Delegate senza argomenti
+	/// </summary>
+	public delegate void DelegateNull();
+	/// <summary>
+	/// Delegate con argomento stringa
+	/// </summary>
+	/// <param name="str"></param>
+	public delegate void DelegateStrInt(string str, int num);
 
 	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
-		public enum InstanceCheck
-		{
-			Unique,							// Ammessa una sola istanza
-			Multiple,						// Ammesse più istanze
-			KillOther,						// Ammessa sola l'ultima istanza, le altre vengono eliminate
-		}
-
-		/// <summary>
-		/// Info per il CTOR di IpcPipe
-		/// </summary>
-		public struct Info
-		{
-			public string writePipe;				// Pipe di scrittura
-			public string readPipe;					// Pipe di lettura
-			public bool isMaster;					// Indica se è il master
-			public int delay;						// Pausa per polling pipe di lettura
-			public InstanceCheck instanceCheck;		// Controllo istanze
-
-			public Info(string write_pipe, string read_pipe, bool is_master, int delay_ms, InstanceCheck instance_check)
-			{
-				writePipe = write_pipe;
-				readPipe = read_pipe;
-				isMaster = is_master;
-				delay = delay_ms;
-				instanceCheck = instance_check;
-			}
-
-			public override string ToString()
-			{
-				StringBuilder strb = new StringBuilder();
-				string mst = isMaster ? "Master" : "Slave";
-				strb.AppendLine($"IsMaster: {mst}");
-				strb.AppendLine($"WritePipe: {writePipe}");
-				strb.AppendLine($"ReadPipe: {readPipe}");	
-				strb.AppendLine($"Delay: {delay}");
-				strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
-				return strb.ToString();
-			}
-		}
-
-		/// <summary>
-		/// Connessione bidirezionale con pipe
-		/// </summary>
-		public class PipeConnection : I_ID
-		{
-			int _id;
-			bool isMaster;
-			string writePipeName,readPipeName;
-			NamedPipeServerStream psW;
-			NamedPipeClientStream psR;
-			StreamReader sr;
-			StreamWriter sw;
-			bool isSync;
-			int _id_other;
-
-
-#warning Aggiungere processo per lettura continuativa (thread dedicato) con evento per i messaggi ricevuti
-
-
-			public int ID
-			{
-				get
-				{
-					return _id;
-				}
-				set
-				{
-					_id = value;
-				}
-			}
-			public bool IsMaster
-			{
-				get
-				{
-					return isMaster;
-				}
-			}
-			public string WritePipeName
-			{
-				get
-				{
-					return writePipeName;
-				}
-			}
-			public string ReadPipeName
-			{
-				get
-				{
-					return readPipeName;
-				}
-			}
-			public bool IsSync
-			{
-				get
-				{
-					return isSync;
-				}
-				set
-				{
-					isSync = value;
-				}
-			}
-			public int ID_other
-			{
-				get
-				{
-					return _id_other;
-				}
-				set
-				{
-					_id_other = value;
-				}
-			}
-
-			public NamedPipeServerStream PsW
-			{
-				get {return psW;}
-				set {psW = value;}
-			}
-			public NamedPipeClientStream PsR
-			{
-				get {return psR;}
-				set {psR = value;}
-			}
-			public StreamReader Sr
-			{
-				get
-				{
-					return sr;
-				}
-				set
-				{
-					sr = value;
-				}
-			}
-			public StreamWriter Sw
-			{
-				get
-				{
-					return sw;
-				}
-				set
-				{
-					sw = value;
-				}
-			}
-			
-			/// <summary>
-			/// CTOR
-			/// </summary>
-			/// <param name="write_pipe_name"></param>
-			/// <param name="read_pipe_name"></param>
-			/// <param name="is_master"></param>
-			public PipeConnection(string write_pipe_name, string read_pipe_name, bool is_master)
-			{
-				writePipeName = write_pipe_name;
-				readPipeName = read_pipe_name;
-				isMaster = is_master;
-				isSync = false;
-			}
-
-			public PipeConnection()
-			{
-				ID = ID_ERROR;
-				isSync = false;
-			}
-			public override string ToString()
-			{
-				StringBuilder strb = new StringBuilder();
-				strb.AppendLine($"ID: {_id}");
-				string mst = isMaster ? "Master" : "Slave";
-				strb.AppendLine($"IsMaster: {mst}");
-				strb.AppendLine($"WritePipe: {WritePipeName}");
-				strb.AppendLine($"ReadPipe: {ReadPipeName}");	
-				strb.AppendLine($"IsSync: {isSync}");
-				strb.AppendLine($"ID_other: {_id_other}");
-				return strb.ToString();
-			}
-
-		}
 
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
-		static DelegateBool segnalaCiclo;                                   // Delegate per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+		
+
+		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+		static DelegateNull segnalaFineCiclo;								// Chiamata dopo l'arresto del ciclo di lettura
 
 
-		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
+		Thread pipeReaderThread;											// Thread di lettura
+		static bool _cicloAbilitato;										// Attivato thread di lettura delle pipe
+		//static string pacchetto;											// Pacchetto da elaborare
+
+
+		/********************************************/
+		// Messaggi di sincronizzazione
+		/********************************************/
+		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione		
 		public static string STR_SYNC = "Sync";								// Stringa di prova per la sincronizzazione
 		public static string STR_SYNC_ERR = "Error";						// Stringa di errore
 		public static char CHR_SEP = '|';									// Carattere separatore per i messaggi
+
+
+		/// <summary>
+		/// Ciclo (thread di lettura) abilitato
+		/// </summary>
+		public static bool CicloAbilitato
+		{
+			get
+			{
+				return _cicloAbilitato;
+			}
+			set
+			{
+				_cicloAbilitato = value;
+				if (segnalaCiclo != null)
+				{
+					segnalaCiclo(_cicloAbilitato);
+				}
+			}
+		}
 
 		/// <summary>
 		/// CTOR
 		/// </summary>
 		/// <exception cref="Exception"></exception>
-		public IpcPipe(DelegateBool segnala_ciclo)
+		public IpcPipe(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
 		{
 			ClearErrMessages();
 			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
-			segnalaCiclo = segnala_ciclo;
+			if(!CreaCiclo(segnala_ciclo, segnala_fine_ciclo))				// I delegate non possono essere nulli
+				throw new Exception(GetLastErrMessage());
 		}
 
 		/// <summary>
 		/// Iteratore per le connessioni pipe (thread safe)
+		/// Statico e privato (usato dal thread di lettura)
 		/// </summary>
 		/// <returns></returns>
-		public IEnumerable<PipeConnection> Pipes()
+		static IEnumerable<PipeConnection> Pipes()
 		{
 			lock(_lockObj)
 			{
@@ -301,7 +162,7 @@ namespace IpcPipes
 		/// Controlla che ci sia un'istanza unica della classe
 		/// </summary>
 		/// <returns></returns>
-		private bool CheckUniquenClassIstance()
+		bool CheckUniquenClassIstance()
 		{
 			bool ok = true;
 			lock(_lockObj)
@@ -408,7 +269,9 @@ namespace IpcPipes
 					try
 					{
 						pp.Sw.WriteLine(IpcPipe.SyncMsgFromId(pp.ID));	// Manda allo slave il messaggio di sincronizzazione con il proprio ID.
+						#pragma warning disable CS8600
 						msg = pp.Sr.ReadLine();                         // Legge la risposta dallo slave.
+						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
 							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (dello slave) dal messaggio
@@ -438,7 +301,9 @@ namespace IpcPipes
 				{                                                       // Se è slave:
 					try
 					{
+						#pragma warning disable CS8600
 						msg = pp.Sr.ReadLine();							// Legge il messaggio dal master
+						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
 							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (del master) dal messaggio
@@ -481,7 +346,7 @@ namespace IpcPipes
 
 		/// <summary>
 		/// Ottiene l'ID (int) da un messaggio di sincronizzazione, se il messaggio è valido. Altrimenti restituisce ID_ERROR
-		/// Il messaggio deve essere costotuito da STR_SYNC + CHR_SEPID
+		/// Il messaggio deve essere costituito da STR_SYNC + CHR_SEPID
 		/// </summary>
 		/// <param name="msg"></param>
 		/// <returns></returns>
@@ -530,6 +395,10 @@ namespace IpcPipes
 			}
 			return strb.ToString();
 		}
+
+
+		#warning AGGIUNGERE GESTIONE DEI DIZIONARI (id, nome comando, delegate...)
+		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprirtà è abbastanza generico
 	}
 }
 

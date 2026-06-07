@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using static IpcPipes.IpcPipe;
 
 /***********************************************/
-// Non c'è ragione di creare una nuva classe
+// Non c'è ragione di creare una nuova classe
 // Inglobare tutto in IpcPipe
 /***********************************************/
 

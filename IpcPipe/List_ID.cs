@@ -109,7 +109,11 @@ namespace List_ID
 			{
 				lock(_lockLst)
 				{
+										
+						
+					#pragma warning disable CS8600
 					T found = _list.Find(x => x.ID == id);
+					#pragma warning restore CS8600 
 					if(found != null)
 					{
 						item = found;
