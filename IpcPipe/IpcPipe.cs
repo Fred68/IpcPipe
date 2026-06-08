@@ -401,7 +401,7 @@ namespace IpcPipes
 			return ok;
 		}
 
-
+		public bool SendPacket
 		/// <summary>
 		/// ToString() override
 		/// </summary>
@@ -418,6 +418,8 @@ namespace IpcPipes
 			return strb.ToString();
 		}
 
+
+		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI !!!
 
 		#warning AGGIUNGERE GESTIONE DEI DIZIONARI (id, nome comando, delegate...)
 		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico

@@ -7,14 +7,14 @@ namespace IpcPipeM
 	public partial class MainForm:NcForm
 	{
 
-		CFG cfg;										// File di configurazione
-		static Form? formRef;							// Riferimento statico a Form1
-		bool errorOnLoad;								// Errore durante OnLoad()
+		CFG cfg;                                        // File di configurazione
+		static Form? formRef;                           // Riferimento statico a Form1
+		bool errorOnLoad;                               // Errore durante OnLoad()
 
-		IpcPipe.Info nfo;								// Info per IpcPipe
+		IpcPipe.Info nfo;                               // Info per IpcPipe
 		IpcPipe ipc;
 
-		int idConn_to_slave = IpcPipe.ID_ERROR;			// Id della prima connessione
+		int idConn_to_slave = IpcPipe.ID_ERROR;         // Id della prima connessione
 
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
@@ -34,14 +34,14 @@ namespace IpcPipeM
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 
-			nfo = new IpcPipe.Info(	cfg.PIPE_out[0],
+			nfo = new IpcPipe.Info(cfg.PIPE_out[0],
 									cfg.PIPE_in[0],
 									cfg.PIPE_master,
-			#warning Impostare il delay da configurazione
+#warning Impostare il delay da configurazione
 									100,
 									IpcPipe.InstanceCheck.Unique
-									);	// Path.GetRandomFileName().Replace(".","") 
-			
+									);  // Path.GetRandomFileName().Replace(".","") 
+
 			try
 			{
 				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
@@ -57,7 +57,7 @@ namespace IpcPipeM
 				Close();
 			}
 
-			
+
 		}
 
 		private void MainForm_Load(object sender,EventArgs e)
@@ -92,8 +92,8 @@ namespace IpcPipeM
 			if(ipc != null)
 			{
 				ipc.ClearErrMessages();
-				
-				idConn_to_slave = ipc.CreatePipeConnection(nfo);			// Crea una connessione e memorizza l'ID
+
+				idConn_to_slave = ipc.CreatePipeConnection(nfo);            // Crea una connessione e memorizza l'ID
 
 				if(idConn_to_slave == IpcPipe.ID_ERROR)
 				{
@@ -108,7 +108,7 @@ namespace IpcPipeM
 			if(ipc != null)
 			{
 				ipc.ClearErrMessages();
-				if(ipc.ConnectPipe(1))
+				if(ipc.ConnectPipe(idConn_to_slave))
 				{
 					NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
 
@@ -126,6 +126,11 @@ namespace IpcPipeM
 					NcMessageBox.Show(this,ipc.GetErrMessageString());
 				}
 			}
+		}
+
+		private void button3_Click(object sender,EventArgs e)
+		{
+
 		}
 	}
 }

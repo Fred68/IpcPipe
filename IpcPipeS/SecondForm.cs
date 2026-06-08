@@ -68,7 +68,7 @@ namespace IpcPipeS
 		{
 			if(ipc!=null)
 			{
-				if(ipc.ConnectPipe(1))
+				if(ipc.ConnectPipe(idConn_to_master))
 				{
 					MessageBox.Show(this,"Connessione riuscita");
 
@@ -87,6 +87,11 @@ namespace IpcPipeS
 				}
 
 			}
+		}
+
+		private void button3_Click(object sender,EventArgs e)
+		{
+
 		}
 	}
 }
