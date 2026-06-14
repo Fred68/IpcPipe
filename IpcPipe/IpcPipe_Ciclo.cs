@@ -15,8 +15,7 @@ namespace IpcPipes
 		/* Formato dati su stream:
 		
 				START_PK			inizio pacchetto					
-				iPk					tipo di pacchetto (intero)
-				dati...				in formato json
+				dati...				pacchetto in formato stringa. Il tipo di dato o pacchetto è all'interno
 				END_PK				fine pacchetto
 
 				START_PK
@@ -36,7 +35,6 @@ namespace IpcPipes
 		const string START_PK =	"\x0006***S***";						// Inizio pacchetto
 		const string END_PK =	"\u0006***E***";						// Fine pachetto
 		const string END_TR =	"\u0006***X***";						// Fine trasmissione
-		const int TPK_NULL =	-1;										// Tipo pacchetto indefinito
 
 
 
@@ -49,9 +47,11 @@ namespace IpcPipes
 
 			List<string> lBuff = new List<string>();					// Buffer di lettura
 			bool inPk = false;											// In lettura pacchetto (dopo START_PK)
-			int nlPk = 0;												// Numero di linee dopo START_PK
-			int tpPk = TPK_NULL;
-			string pacchetto;											// Pacchetto da elaborare
+
+			#warning AGGIUNGERE LE CLASSI Pacchetto (base) e la generica Pacchetto<T> : Pacchetto there T : class, per incapsulare i dati
+			#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
+			#warning NELLA CLASSE Pacchetto<T> creare le funzioni Serialize e Deserialize (usare Newtonsoft Json)
+			#warning Nella PipeConnection, valutare lista con handler base (per Pacchetto), ma che contengono handler di Pacchetto<T>: PROVARE !!!
 
 			do
 			{
@@ -72,26 +72,23 @@ namespace IpcPipes
 								{
 									switch(linea)
 									{
-										case START_PK:					// Intestazione non aggiunta al buffer
+										case START_PK:					// Intestazione (non aggiunta al buffer)
 										{
 											lBuff.Clear();				
 											inPk = true;
-											nlPk = 0;
 										}
 										break;
-										case END_PK:					// Fine pacchetto non aggiunto al buffer
+										case END_PK:					// Fine pacchetto (non aggiunto al buffer)
 										{	
 											inPk = false;
-											ElaboraPacchetto(Buff2String(lBuff), tpPk, ppCon);
+											ElaboraPacchetto(Buff2String(lBuff), ppCon);
 											lBuff.Clear();
-											nlPk = 0;
 										}
 										break;
 										case END_TR:
 										{
 											lBuff.Clear();
 											inPk = false;
-											nlPk = 0;
 											CicloAbilitato = false;		// Modifica la proprietà (richiama altre funzioni)
 										}
 										break;
@@ -100,14 +97,7 @@ namespace IpcPipes
 										{
 											if(inPk)
 											{
-												if(nlPk == 1)
-												{
-													tpPk = RiconosciTipoPacchetto(linea,ppCon);
-												}
-												else
-												{
-													lBuff.Add(linea);	// Linea con tipo di pacchetto non aggiunto al buffer
-												}
+												lBuff.Add(linea);		// Linea con tipo di pacchetto non aggiunto al buffer
 											}
 										}
 										break;
@@ -144,18 +134,7 @@ namespace IpcPipes
 			return sb.ToString();
 		}
 
-		static int RiconosciTipoPacchetto(string linea, PipeConnection pcon)
-		{
-			int tp = TPK_NULL;
-
-			#warning AGGIUNGERE RICONOSCIMENTO DA DIZIONARIO della PipeConnection DELLE FUNZIONI SOTTOSCRITTE
-
-			tp = 100;		// Per test
-
-			return tp;
-		}
-
-		static void ElaboraPacchetto(string str, int tpk, PipeConnection pcon)
+		static void ElaboraPacchetto(string str, PipeConnection pcon)
 		{
 			#warning COMPLETARE CON DELEGATE DA DIZIONARIO della PipeConnection
 		}

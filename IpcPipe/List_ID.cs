@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace List_ID
 {
-
 	public interface I_ID
 	{
 		int ID
@@ -53,16 +53,17 @@ namespace List_ID
 		}
 
 		/// <summary>
-		/// Add: aggiunge un elemento alla lista, assegnandogli un ID univoco (thread safe)
+		/// Aggiunge un elemento, assegna automaticamente un ID univoco (thread safe)
 		/// </summary>
 		/// <param name="item"></param>
-		/// <returns></returns>
+		/// <returns>item ID or ID_ERROR</returns>
 		public int Add(T item)
 		{
 			int id;
+			Debug.Assert(_list != null);
 			lock(_lockLst)
 			{
-				id = GetFirstFreeID();
+				id = GetFirstFreeID(false);
 				item.ID = id;
 				_list.Add(item);
 			}
@@ -70,7 +71,29 @@ namespace List_ID
 		}
 
 		/// <summary>
-		/// GetEnumerator: restituisce un enumeratore per iterare sulla lista (non thread safe)
+		/// Aggiunge un elemento con l'ID specificato
+		/// </summary>
+		/// <param name="id">new id</param>
+		/// <param name="item"></param>
+		/// <returns>item ID or ID_ERROR</returns>
+		public int Add(int id, T item)
+		{
+			int idTmp = ID_ERROR;
+			Debug.Assert(_list != null);
+			lock (_lockLst)
+			{
+				if(IsIDfree(id,false))
+				{
+					idTmp = id;
+					item.ID = idTmp;
+					_list.Add(item);
+				}
+			}
+			return idTmp;
+		}
+
+		/// <summary>
+		/// GetEnumerator (non thread safe)
 		/// </summary>
 		/// <returns></returns>
 		public IEnumerator<T> GetEnumerator()
@@ -79,20 +102,50 @@ namespace List_ID
 		}
 
 		/// <summary>
-		/// GetFirstFreeID: restituisce il primo ID libero (non thread safe)
+		/// Restituisce il primo ID libero
 		/// </summary>
+		/// <param name="thread_safe">se true, esegue il lock</param>
 		/// <returns></returns>
-		protected int GetFirstFreeID()
+		protected int GetFirstFreeID(bool thread_safe)
 		{
 			int id = 1;
-			lock(_lockLst)
+			Debug.Assert(_list != null);
+			if(thread_safe)
 			{
-				while(_list.Any(x => (x.ID == id) ))
+				lock(_lockLst)
 				{
-					id++;
+					while(_list.Any(x => (x.ID == id) ))	id++;
 				}
 			}
+			else
+			{
+				while(_list.Any(x => (x.ID == id) ))	id++;
+			}
 			return id;
+		}
+
+		/// <summary>
+		/// Verifica se l'ID specificato è libero
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="thread_safe">se true, esegue il lock</param>
+		/// <returns></returns>
+		protected bool IsIDfree(int id, bool thread_safe)
+		{
+			bool exist = true;
+			Debug.Assert(_list != null);
+			if(thread_safe)
+			{
+				lock(_lockLst)
+				{
+					exist = _list.Exists(x => x.ID == id);
+				}
+			}
+			else
+			{
+				exist = _list.Exists(x => x.ID == id);
+			}
+			return !exist;
 		}
 
 		/// <summary>
@@ -105,21 +158,17 @@ namespace List_ID
 			T item = new T();
 			item.ID = ID_ERROR;
 
-			if(_list != null)
+			lock(_lockLst)
 			{
-				lock(_lockLst)
+				#pragma warning disable CS8600
+				T found = _list.Find(x => x.ID == id);
+				#pragma warning restore CS8600 
+				if(found != null)
 				{
-										
-						
-					#pragma warning disable CS8600
-					T found = _list.Find(x => x.ID == id);
-					#pragma warning restore CS8600 
-					if(found != null)
-					{
-						item = found;
-					}
+					item = found;
 				}
 			}
+			
 			return item;
 		}
 

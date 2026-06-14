@@ -32,7 +32,7 @@ namespace IpcPipes
 
 	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
-
+		
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
@@ -52,6 +52,46 @@ namespace IpcPipes
 		public static string STR_SYNC_ERR = "Error";						// Stringa di errore
 		public static char CHR_SEP = '|';                                   // Carattere separatore per i messaggi
 		#endregion
+
+		public enum InstanceCheck
+		{
+			Unique,							// Ammessa una sola istanza
+			Multiple,						// Ammesse più istanze
+			KillOther,						// Ammessa sola l'ultima istanza, le altre vengono eliminate
+		}
+
+		/// <summary>
+		/// Info per il CTOR di IpcPipe
+		/// </summary>
+		public struct Info
+		{
+			public string writePipe;				// Pipe di scrittura
+			public string readPipe;					// Pipe di lettura
+			public bool isMaster;					// Indica se è il master
+			public int delay;						// Pausa per polling pipe di lettura
+			public InstanceCheck instanceCheck;		// Controllo istanze
+
+			public Info(string write_pipe, string read_pipe, bool is_master, int delay_ms, InstanceCheck instance_check)
+			{
+				writePipe = write_pipe;
+				readPipe = read_pipe;
+				isMaster = is_master;
+				delay = delay_ms;
+				instanceCheck = instance_check;
+			}
+
+			public override string ToString()
+			{
+				StringBuilder strb = new StringBuilder();
+				string mst = isMaster ? "Master" : "Slave";
+				strb.AppendLine($"IsMaster: {mst}");
+				strb.AppendLine($"WritePipe: {writePipe}");
+				strb.AppendLine($"ReadPipe: {readPipe}");	
+				strb.AppendLine($"Delay: {delay}");
+				strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
+				return strb.ToString();
+			}
+		}
 
 
 		/********************************************/
@@ -232,7 +272,6 @@ namespace IpcPipes
 			}
 			return ok;
 		}
-
 
 		/// <summary>
 		/// Crea una connessione pipe e la aggiunge alla lista delle connessioni
