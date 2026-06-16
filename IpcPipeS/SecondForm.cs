@@ -54,11 +54,15 @@ namespace IpcPipeS
 		{
 			if(ipc!=null)
 			{
-				idConn_to_master = ipc.CreatePipeConnection(nfo);
+				int tmp = ipc.CreatePipeConnection(nfo);
 
-				if(idConn_to_master == IpcPipe.ID_ERROR)
+				if(tmp == IpcPipe.ID_ERROR)
 				{
 					MessageBox.Show(this,ipc.GetErrMessageString());
+				}
+				else
+				{
+					idConn_to_master = tmp;
 				}
 				MessageBox.Show(ipc.ToString());
 			}

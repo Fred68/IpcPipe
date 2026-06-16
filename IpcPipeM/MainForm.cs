@@ -93,11 +93,15 @@ namespace IpcPipeM
 			{
 				ipc.ClearErrMessages();
 
-				idConn_to_slave = ipc.CreatePipeConnection(nfo);            // Crea una connessione e memorizza l'ID
+				int tmp = ipc.CreatePipeConnection(nfo);            // Crea una connessione e memorizza l'ID
 
-				if(idConn_to_slave == IpcPipe.ID_ERROR)
+				if(tmp == IpcPipe.ID_ERROR)
 				{
 					NcMessageBox.Show(this,ipc.GetErrMessageString());
+				}
+				else
+				{
+					idConn_to_slave = tmp;
 				}
 				NcMessageBox.Show(this,ipc.ToString());
 			}

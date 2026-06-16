@@ -1,5 +1,5 @@
 ﻿using List_ID;
-using ScambioDati;
+//using ScambioDati;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +14,14 @@ namespace IpcPipes
 	// Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 	#pragma warning disable CS8618     // Disabilita warning per campi non inizializzati (non nullable)                                                                      
 	
+
+	public class MyClass
+	{
+		public double x;
+		public string str;
+	}
+
+
 	public class PipeConnection : I_ID
 	{
 		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
@@ -30,17 +38,6 @@ namespace IpcPipes
 
 		private static List_ID<Cmd> _commands;								// Lista dei comandi (thread safe)
 
-		#warning DEFINIRE BENE I DATI PER I DIZIONARI.
-		/*
-					
-				ipk				int: chiave con il tipo di pacchetto
-				string			descrizione del tipo di pacchetto
-				delegate...		funzione che elabora il contenuto del pacchetto (da definire se funzione generica o no)
-								Usare DictionaryEntry base e poi derivate DictionaryEntry<T> ??? Soluzione più flessibile
-
-
-
-		*/
 
 		#region PROPRIETA'
 		/// <summary>
@@ -207,13 +204,36 @@ namespace IpcPipes
 			return strb.ToString();
 		}
 
-		public int CreateCommand<T>(int nCommand, Handler<T> hnd)
+		#warning Controllare
+		public int CreateCommand<T>(int nCommand, Handler<T> hnd, string name)
 		{
-			int idCmd = ID_ERROR;
-			Cmd<T> _cmd = new Cmd<T>(nCommand, hnd);
+			int idCmd = Cmd.ID_ERROR;
+			Cmd<T> _cmd = new Cmd<T>(hnd, nCommand, name);
+			idCmd = _commands.Add(nCommand, _cmd);
+			return idCmd;
+		}
+
+		#warning Controllare
+		public int CreateCommand<T>(Handler<T> hnd, string name)
+		{
+			int idCmd = Cmd.ID_UNDEF;
+			Cmd<T> _cmd = new Cmd<T>(hnd, idCmd, name);
 			idCmd = _commands.Add(_cmd);
 			return idCmd;
 		}
+
+
+		public Type GetDataType(int nType)
+		{
+			Type tp;
+
+			tp = typeof(MyClass);
+
+			return tp;
+		}
+
+
+
 	}
 	#pragma warning restore CS8618 
 }

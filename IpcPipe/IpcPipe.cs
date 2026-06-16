@@ -456,12 +456,16 @@ namespace IpcPipes
 			return strb.ToString();
 		}
 
+		public void Test<T>(T obj) where T : class
+		{
 
+		}
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
 		#warning USARE FUNZIONI GENERICHE
 
-		#warning AGGIUNGERE GESTIONE DEI DIZIONARI (id, nome comando, delegate...)
+		#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
 		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
+
 		#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
 	}
 }

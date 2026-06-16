@@ -1,4 +1,5 @@
-﻿using System;
+﻿//using ScambioDati;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -81,7 +82,7 @@ namespace IpcPipes
 										case END_PK:					// Fine pacchetto (non aggiunto al buffer)
 										{	
 											inPk = false;
-											ElaboraPacchetto(Buff2String(lBuff), ppCon);
+											AnalizzaPacchetto(Buff2String(lBuff), ppCon);
 											lBuff.Clear();
 										}
 										break;
@@ -130,12 +131,20 @@ namespace IpcPipes
 		public static string Buff2String(List<string> list)
 		{
 			StringBuilder sb = new StringBuilder();
-			foreach(string s in list)	sb.AppendLine(s);
+			foreach(string s in list)		sb.AppendLine(s);
 			return sb.ToString();
 		}
 
-		static void ElaboraPacchetto(string str, PipeConnection pcon)
+		static void AnalizzaPacchetto(string str, PipeConnection pcon)
 		{
+			
+
+		}
+
+		static void AnalizzaPacchetto<T>(string str, PipeConnection pcon) where T : class
+		{
+			Pacchetto<T> pk = Pacchetto<T>.Deserialize(str, pcon);
+			
 			#warning COMPLETARE CON DELEGATE DA DIZIONARIO della PipeConnection
 		}
 
