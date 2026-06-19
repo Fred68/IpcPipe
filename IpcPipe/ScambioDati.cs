@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 #pragma warning disable CS8618
+#pragma warning disable CS8625
+#pragma warning disable CS8600
 
 //namespace ScambioDati
 namespace IpcPipes
@@ -33,64 +35,146 @@ namespace IpcPipes
 		/// Se tipo == 0: indefinito
 		/// Se tipo < 0: errore
 		/// </summary>
-		protected int tipo;
+		protected int tp;
+
+		/// <summary>
+		/// Tipo di dato
+		/// </summary>
+		protected Type tpDat;
+
+		/// <summary>
+		/// Data
+		/// </summary>
+		protected object _data;
 
 		/// <summary>
 		/// Proprietà: Tipo
+		/// > 0: ok, comando
+		/// == 0: indefinito
+		/// < 0: errore
 		/// </summary>
-		public int Tipo { get { return tipo; } }
+		public int Tipo
+		{
+			get { return tp; }
+			protected set { tp = value; }	
+		}
 
-		public bool isOk { get { return true; } }
+		/// <summary>
+		/// Tipo di dato
+		/// </summary>
+		public Type TipoDato
+		{
+			get { return tpDat; }
+			protected set { tpDat = value; }
+		}
 
 
 		/// <summary>
-		/// CTOR protetto
+		/// isOk true se Tipo > 1
 		/// </summary>
-		/// <param name="tipo"></param>
-		protected Pacchetto(int tipo = (int)Pacchetto.TPK.UNDEF)
+		public bool isOk
 		{
-			this.tipo = tipo;
+			get { return (tp > 0); }
 		}
 
+
+		/// <summary>
+		/// CTOR
+		/// </summary>
+		/// <param name="tipo"></param>
+		public Pacchetto(int tipo = (int)Pacchetto.TPK.UNDEF)
+		{
+			this.tp = tipo;
+			this.tpDat = null;
+			this._data = null;
+		}
+
+		/// <summary>
+		/// CTOR
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="tipo"></param>
+		public Pacchetto(Type type, int tipo = (int)Pacchetto.TPK.UNDEF)
+		{
+			this.tp = tipo;
+			this.tpDat = type;
+			this._data = null;
+		}
+
+		/// <summary>
+		/// CTOR
+		/// </summary>
+		/// <param name="obj"></param>
+		/// <param name="type"></param>
+		/// <param name="tipo"></param>
+		public Pacchetto(object obj, Type type, int tipo = (int)Pacchetto.TPK.UNDEF)
+		{
+			this.tp = tipo;
+			this.tpDat = type;
+			this._data = obj;
+		}
+
+		/// <summary>
+		/// Serialize data to string
+		/// </summary>
+		/// <param name="pk"></param>
+		/// <returns></returns>
 		public static string Serialize(Pacchetto pk)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine(pk.tipo.ToString());					// Scrive il tipo di pacchetto così com'é (anche se errore o indefinito)
+			sb.AppendLine(pk.tp.ToString());
+			sb.AppendLine(pk.tpDat.ToString());
+			if(pk._data != null)
+			{
+				sb.AppendLine(JsonConvert.SerializeObject(pk._data,pk.tpDat,null));
+			}
 			return sb.ToString();
 		}
 
 		public static Pacchetto Deserialize(string str, PipeConnection pcon)
 		{
-			Pacchetto pk = new Pacchetto();
-			int tipopk = (int)Pacchetto.TPK.UNDEF;
-			int pos = str.IndexOf(Environment.NewLine);			// Cerca il primo fine linea
+			Pacchetto pk;											// Pacchetto (non allocato)
+			int tipopk = (int)Pacchetto.TPK.UNDEF;					// Tipo di pacchetto (comando)
+			Type type = null;										// Tipo di dato
+
+			object x = null;										// Oggetto (base)
+
+			int pos = str.IndexOf(Environment.NewLine);											// Cerca il primo fine linea
 			if(pos != -1)										
 			{
-				string prima_linea = str.Substring(0, pos + Environment.NewLine.Length).TrimEnd();		// Estrae linea (se trovato fine linea)
-				if(int.TryParse(prima_linea, out tipopk))		// Legge il tipo di pacchetto (int), se possibile
+				string prima_linea; 
+				prima_linea= str.Substring(0, pos + Environment.NewLine.Length).TrimEnd();		// Estrae linea (se trovato fine linea)
+				if(int.TryParse(prima_linea, out tipopk))										// Legge il tipo di pacchetto
 				{
-					str = str.Substring(pos + Environment.NewLine.Length).TrimStart();
-
-					Type type = pcon.GetDataType(1);
-					object X = JsonConvert.DeserializeObject(str,type);
-
-					#warning PROVARE COSI' !!!!!!!!!!! Subito.... !!!!!!
-
+					str = str.Substring(pos + Environment.NewLine.Length).TrimStart();			// Elimina la prima linea			
+					type = pcon.GetDataType(tipopk);											// Ottiene il tipo di dato in base al tipo di pacchetto
+					#warning CONTROLLARE type... possibile errore se comando non presente
 					try
 					{
-						pk = new Pacchetto(tipopk);
+						x = JsonConvert.DeserializeObject(str,type);							// Deserializza su un object semplice
 					}
-					catch (Exception ex)
+					catch(Exception ex)
 					{
-						pk.tipo = (int)Pacchetto.TPK.ERROR;
-						Debug.WriteLine($"Errore nella deserializzazione: {ex.Message}");
+						tipopk = (int)Pacchetto.TPK.ERROR;
+						Debug.WriteLine($"Errore nella deserializzazione: {ex.Message}");	
 					}
 				}
 				else
 				{
-					pk.tipo = (int)Pacchetto.TPK.ERROR;
+					tipopk = (int)Pacchetto.TPK.ERROR;											// Fallita conversione del numero sulla prima linea 
 				}
 			}
+			
+			
+			if((x != null) && (type != null))						// Alloca il pacchetto					
+			{
+				pk = new Pacchetto(x, type, tipopk);						
+			}
+			else
+			{
+				pk = new Pacchetto(tipopk);
+			}
+			
 			return pk;
 		}
 	}
@@ -139,7 +223,7 @@ namespace IpcPipes
 		public static string Serialize(Pacchetto<T> pk)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine(pk.tipo.ToString());					// Scrive il tipo di pacchetto così com'é (anche se errore o indefinito)
+			sb.AppendLine(pk.tp.ToString());					// Scrive il tipo di pacchetto così com'é (anche se errore o indefinito)
 			if(pk.dati != null)
 			{
 				sb.AppendLine(JsonConvert.SerializeObject(pk.dati));
@@ -179,13 +263,13 @@ namespace IpcPipes
 					}
 					catch (Exception ex)
 					{
-						pk.tipo = (int)Pacchetto.TPK.ERROR;
+						pk.tp = (int)Pacchetto.TPK.ERROR;
 						Debug.WriteLine($"Errore nella deserializzazione: {ex.Message}");
 					}
 				}
 				else
 				{
-					pk.tipo = (int)Pacchetto.TPK.ERROR;
+					pk.tp = (int)Pacchetto.TPK.ERROR;
 				}
 			}
 
@@ -267,5 +351,6 @@ namespace IpcPipes
 	}
 
 }
-
+#pragma warning restore CS8600
+#pragma warning restore CS8625
 #pragma warning restore CS8618

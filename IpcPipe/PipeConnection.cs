@@ -222,14 +222,22 @@ namespace IpcPipes
 			return idCmd;
 		}
 
-
+		/// <summary>
+		/// Restituisce il tipo di dato associato al tipo di pacchetto
+		/// Restiruisce null se il tipo di pacchetto non è registrato
+		/// </summary>
+		/// <param name="nType"></param>
+		/// <returns></returns>
 		public Type GetDataType(int nType)
 		{
-			Type tp;
+			#pragma warning disable CS8600
+			Type tp = null;
 
+			#warning DA SCRIVERE
 			tp = typeof(MyClass);
 
 			return tp;
+			#pragma warning restore CS8600
 		}
 
 
