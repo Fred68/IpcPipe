@@ -137,13 +137,7 @@ namespace IpcPipes
 
 		static void AnalizzaPacchetto(string str, PipeConnection pcon)
 		{
-			
-
-		}
-
-		static void AnalizzaPacchetto<T>(string str, PipeConnection pcon) where T : class
-		{
-			Pacchetto<T> pk = Pacchetto<T>.Deserialize(str, pcon);
+			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
 			
 			#warning COMPLETARE CON DELEGATE DA DIZIONARIO della PipeConnection
 		}

@@ -17,8 +17,28 @@ namespace IpcPipes
 
 	public class MyClass
 	{
-		public double x;
-		public string str;
+		double _x;
+		string _str;
+
+		public double X
+		{
+			get { return _x;}
+			set { _x = value; }
+		}	
+
+		public string Str
+		{
+			get{ return _str;}
+			set { _str = value; }
+		}
+		public MyClass()
+		{}
+
+		public MyClass(double x, string str)
+		{
+			_x = x;
+			_str = str;
+		}
 	}
 
 
@@ -240,8 +260,24 @@ namespace IpcPipes
 			#pragma warning restore CS8600
 		}
 
+		public string TestSer(object x, Type tp, int com)
+		{
+			string s = string.Empty;
+			if(x != null)
+			{
+				Pacchetto p = new Pacchetto(com, tp, x);
+				s = Pacchetto.Serialize(p);
+			}
+			return s;
+		}
 
+		Pacchetto TestDeser(string s)
+		{
+			Pacchetto p = Pacchetto.Deserialize(s,this);
+			return p;
+		}
 
 	}
 	#pragma warning restore CS8618 
+}
 }
