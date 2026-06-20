@@ -166,7 +166,7 @@ namespace IpcPipes
 			}
 			if((x != null) && (type != null))						// Alloca il pacchetto					
 			{
-				pk = new Pacchetto(x, type, tipopk);						
+				pk = new Pacchetto(tipopk, type, x);						
 			}
 			else
 			{
@@ -191,16 +191,11 @@ namespace IpcPipes
 		int _id;
 
 		public int ID
-			{
-				get
-				{
-					return _id;
-				}
-				set
-				{
-					_id = value;
-				}
-			}
+		{
+			get {return _id;}
+			set {_id = value;}
+		}
+		
 	}
 
 	public delegate bool Handler<TH>(TH arg);
@@ -209,13 +204,19 @@ namespace IpcPipes
 	{
 		Handler<T> _handler;
 		string _name;
+		Type _tp;
 
 		#region PROPRIETA'
 		public string Name
-		{
-			
+		{		
 			get {return _name;}
 			set {_name = value;}
+		}
+
+		public Type Type
+		{
+			get { return _tp; }
+			private set { _tp = value; }
 		}
 		#endregion
 		
@@ -230,6 +231,7 @@ namespace IpcPipes
 			_handler = new Handler<T>(handler);
 			ID = nCommand;
 			_name = name;
+			_tp = typeof(T);
 		}
 		
 		/// <summary>

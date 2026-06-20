@@ -9,38 +9,42 @@ using System.Text;
 using System.Threading.Tasks;
 using static IpcPipes.IpcPipe;
 
+
+/// <summary>
+/// Per PROVE
+/// </summary>
+public class MyClass
+{
+	double _x;
+	string _str;
+
+	public double X
+	{
+		get { return _x;}
+		set { _x = value; }
+	}	
+
+	public string Str
+	{
+		get{ return _str;}
+		set { _str = value; }
+	}
+	public MyClass()
+	{}
+
+	public MyClass(double x, string str)
+	{
+		_x = x;
+		_str = str;
+	}
+}
+
+
 namespace IpcPipes
 {
 	// Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 	#pragma warning disable CS8618     // Disabilita warning per campi non inizializzati (non nullable)                                                                      
 	
-
-	public class MyClass
-	{
-		double _x;
-		string _str;
-
-		public double X
-		{
-			get { return _x;}
-			set { _x = value; }
-		}	
-
-		public string Str
-		{
-			get{ return _str;}
-			set { _str = value; }
-		}
-		public MyClass()
-		{}
-
-		public MyClass(double x, string str)
-		{
-			_x = x;
-			_str = str;
-		}
-	}
-
 
 	public class PipeConnection : I_ID
 	{
@@ -65,14 +69,8 @@ namespace IpcPipes
 		/// </summary>
 		public int ID
 		{
-			get
-			{
-				return _id;
-			}
-			set
-			{
-				_id = value;
-			}
+			get{return _id;}
+			set{_id = value;}
 		}
 
 		/// <summary>
@@ -80,10 +78,7 @@ namespace IpcPipes
 		/// </summary>
 		public bool IsMaster
 		{
-			get
-			{
-				return isMaster;
-			}
+			get{return isMaster;}
 		}
 
 		/// <summary>
@@ -91,10 +86,7 @@ namespace IpcPipes
 		/// </summary>
 		public string WritePipeName
 		{
-			get
-			{
-				return writePipeName;
-			}
+			get{return writePipeName;}
 		}
 
 		/// <summary>
@@ -102,10 +94,7 @@ namespace IpcPipes
 		/// </summary>
 		public string ReadPipeName
 		{
-			get
-			{
-				return readPipeName;
-			}
+			get{return readPipeName;}
 		}
 
 		/// <summary>
@@ -113,14 +102,8 @@ namespace IpcPipes
 		/// </summary>
 		public bool IsSync
 		{
-			get
-			{
-				return isSync;
-			}
-			set
-			{
-				isSync = value;
-			}
+			get{return isSync;}
+			set{isSync = value;}
 		}
 
 		/// <summary>
@@ -128,14 +111,8 @@ namespace IpcPipes
 		/// </summary>
 		public int ID_other
 		{
-			get
-			{
-				return _id_other;
-			}
-			set
-			{
-				_id_other = value;
-			}
+			get{return _id_other;}
+			set{_id_other = value;}
 		}
 
 		/// <summary>
@@ -161,14 +138,8 @@ namespace IpcPipes
 		/// </summary>
 		public StreamReader Sr
 		{
-			get
-			{
-				return sr;
-			}
-			set
-			{
-				sr = value;
-			}
+			get{return sr;}
+			set{sr = value;}
 		}
 
 		/// <summary>
@@ -176,14 +147,8 @@ namespace IpcPipes
 		/// </summary>
 		public StreamWriter Sw
 		{
-			get
-			{
-				return sw;
-			}
-			set
-			{
-				sw = value;
-			}
+			get{return sw;}
+			set{sw = value;}
 		}
 		#endregion
 
@@ -253,8 +218,7 @@ namespace IpcPipes
 			#pragma warning disable CS8600
 			Type tp = null;
 
-			#warning DA SCRIVERE
-			tp = typeof(MyClass);
+			#warning Aggiungere ricerca tra i Cmd memorizzati
 
 			return tp;
 			#pragma warning restore CS8600
@@ -280,4 +244,4 @@ namespace IpcPipes
 	}
 	#pragma warning restore CS8618 
 }
-}
+
