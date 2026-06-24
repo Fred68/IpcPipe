@@ -33,9 +33,9 @@ namespace IpcPipes
 		/********************************************/
 		// Costanti (con carattere ASCII ACK = 006)
 		/********************************************/
-		const string START_PK =	"\x0006***S***";						// Inizio pacchetto
-		const string END_PK =	"\u0006***E***";						// Fine pachetto
-		const string END_TR =	"\u0006***X***";						// Fine trasmissione
+		const string START_PK =	"\x0006*S*";						// Inizio pacchetto
+		const string END_PK =	"\u0006*E*";						// Fine pachetto
+		const string END_TR =	"\u0006*X*";						// Fine trasmissione
 
 
 

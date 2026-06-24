@@ -1,0 +1,32 @@
+
+/*******************************************************************/
+//
+// Classi
+//
+/*******************************************************************/
+
+Classe		public				Namespace			Descrizione 
+
+Cmd								IpcPipes			Comando
+			int ID
+Cmd<T>							IpcPipes			Comando con bool handlet<T>(T arg)
+			string Name
+			Type Type
+			
+Pacchetto						IpcPipes			Pacchetto dati + comando
+			int Tipo								Tipo di comando
+			Type TipoDato							Tipo di dato
+			string Serialize(Pacchetto pk)
+			Pacchetto Deserialize(string str, PipeConnection pcon)
+			
+PipeConnection					IpcPipes			Connessione
+			int ID, ID_other
+			string Read/WritePipeName
+			NamedPipeServer/ClientStream
+			StreamReader/Writer
+			
+			int CreateCommand<T>(int nCommand, Handler<T> hnd, string name)
+			Type GetDataType(int nType)
+			
+
+			

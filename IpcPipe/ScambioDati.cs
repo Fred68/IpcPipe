@@ -8,12 +8,15 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using static System.Net.WebRequestMethods;
+
 
 #pragma warning disable CS8618
 #pragma warning disable CS8625
 #pragma warning disable CS8600
+#pragma warning disable CS8603
 
-//namespace ScambioDati
 namespace IpcPipes
 {
 	
@@ -30,12 +33,12 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Tipo di pacchetto
+		/// Tipo di comando del pacchetto
 		/// Se tipo > 0: ok, comando
 		/// Se tipo == 0: indefinito
 		/// Se tipo < 0: errore
 		/// </summary>
-		protected int tp;
+		protected int cmd;
 
 		/// <summary>
 		/// Tipo di dato
@@ -47,44 +50,46 @@ namespace IpcPipes
 		/// </summary>
 		protected object _data;
 
+		#region PROPRIETA'
 		/// <summary>
-		/// Proprietà: Tipo
-		/// > 0: ok, comando
+		/// Proprietà: Comando
+		/// > 0: ok
 		/// == 0: indefinito
 		/// < 0: errore
 		/// </summary>
-		public int Tipo
+		public int Comando
 		{
-			get { return tp; }
-			protected set { tp = value; }	
+			get { return cmd; }
+			protected set { cmd = value; }	
 		}
-
+	
 		/// <summary>
 		/// Tipo di dato
 		/// </summary>
-		public Type TipoDato
+		public Type Tipo
 		{
 			get { return tpDat; }
 			protected set { tpDat = value; }
 		}
-
 
 		/// <summary>
 		/// isOk true se Tipo > 1
 		/// </summary>
 		public bool isOk
 		{
-			get { return (tp > 0); }
+			get { return (cmd > 0); }
 		}
 
+		#endregion
 
+		#region CTORs
 		/// <summary>
 		/// CTOR
 		/// </summary>
-		/// <param name="tipo"></param>
-		public Pacchetto(int tipo)
+		/// <param name="cmd"></param>
+		public Pacchetto(int cmd)
 		{
-			this.tp = tipo;
+			this.cmd = cmd;
 			this.tpDat = null;
 			this._data = null;
 		}
@@ -93,10 +98,10 @@ namespace IpcPipes
 		/// CTOR
 		/// </summary>
 		/// <param name="type"></param>
-		/// <param name="tipo"></param>
-		public Pacchetto(int tipo, Type type)
+		/// <param name="cmd"></param>
+		public Pacchetto(int cmd, Type type)
 		{
-			this.tp = tipo;
+			this.cmd = cmd;
 			this.tpDat = type;
 			this._data = null;
 		}
@@ -106,13 +111,15 @@ namespace IpcPipes
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <param name="type"></param>
-		/// <param name="tipo"></param>
-		public Pacchetto(int tipo, Type type, object obj)
+		/// <param name="cmd"></param>
+		public Pacchetto(int cmd, Type type, object obj)
 		{
-			this.tp = tipo;
+			this.cmd = cmd;
 			this.tpDat = type;
 			this._data = obj;
 		}
+		
+		#endregion
 
 		/// <summary>
 		/// Serialize data to string
@@ -122,7 +129,7 @@ namespace IpcPipes
 		public static string Serialize(Pacchetto pk)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine(pk.tp.ToString());
+			sb.AppendLine(pk.cmd.ToString());
 			sb.AppendLine(pk.tpDat.ToString());
 			if(pk._data != null)
 			{
@@ -131,6 +138,12 @@ namespace IpcPipes
 			return sb.ToString();
 		}
 
+		/// <summary>
+		/// Deserialize
+		/// </summary>
+		/// <param name="str"></param>
+		/// <param name="pcon"></param>
+		/// <returns></returns>
 		public static Pacchetto Deserialize(string str, PipeConnection pcon)
 		{
 			Pacchetto pk;											// Pacchetto (non allocato)
@@ -188,14 +201,37 @@ namespace IpcPipes
 		/// </summary>
 		public const int ID_UNDEF = 0;
 
-		int _id;
+		protected int _id;
+		
 
 		public int ID
 		{
 			get {return _id;}
 			set {_id = value;}
 		}
+
+		public virtual Type Tipo
+		{
+			#warning Questa funzione non dovrebbe mai essere chiamata
+			get { return (Type)null; }
+			set {}
+		}
 		
+		public Cmd()
+		{
+			_id = ID_UNDEF;
+		}
+		public Cmd(int id)
+		{
+			_id = id;
+		}
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append(_id.ToString());
+			return sb.ToString() ;
+		}
 	}
 
 	public delegate bool Handler<TH>(TH arg);
@@ -213,27 +249,29 @@ namespace IpcPipes
 			set {_name = value;}
 		}
 
-		public Type Type
+		public override Type Tipo
 		{
+			#warning usare public e protected nella classe base e new al posto di override
 			get { return _tp; }
-			private set { _tp = value; }
+			set { _tp = value; }
 		}
 		#endregion
 		
 		/// <summary>
 		/// CTOR
 		/// </summary>
-		/// <param name="nCommand"></param>
+		/// <param name="cmd"></param>
 		/// <param name="handler"></param>
 		/// <param name="name"></param>
-		public Cmd(Handler<T> handler, int nCommand = Cmd.ID_UNDEF, string name = "")
+		public Cmd(Handler<T> handler, int cmd = Cmd.ID_UNDEF, string name = "") : base(cmd)
 		{
+			{
 			_handler = new Handler<T>(handler);
-			ID = nCommand;
 			_name = name;
 			_tp = typeof(T);
 		}
-		
+		}
+
 		/// <summary>
 		/// ToString()
 		/// </summary>
@@ -241,12 +279,13 @@ namespace IpcPipes
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.Append($"{ID.ToString()}:{_name},{typeof(T)}");
+			sb.Append($"{base.ToString()}:{_name},{_tp}");
 			return sb.ToString() ;
 		}
 	}
 
 }
+#pragma warning restore CS8603
 #pragma warning restore CS8600
 #pragma warning restore CS8625
 #pragma warning restore CS8618

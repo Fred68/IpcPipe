@@ -13,31 +13,6 @@ using static IpcPipes.IpcPipe;
 /// <summary>
 /// Per PROVE
 /// </summary>
-public class MyClass
-{
-	double _x;
-	string _str;
-
-	public double X
-	{
-		get { return _x;}
-		set { _x = value; }
-	}	
-
-	public string Str
-	{
-		get{ return _str;}
-		set { _str = value; }
-	}
-	public MyClass()
-	{}
-
-	public MyClass(double x, string str)
-	{
-		_x = x;
-		_str = str;
-	}
-}
 
 
 namespace IpcPipes
@@ -208,20 +183,28 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Restituisce il tipo di dato associato al tipo di pacchetto
+		/// Restituisce il tipo di dato associato al comando del pacchetto
 		/// Restiruisce null se il tipo di pacchetto non è registrato
 		/// </summary>
-		/// <param name="nType"></param>
+		/// <param name="idCmd"></param>
 		/// <returns></returns>
-		public Type GetDataType(int nType)
+		public Type GetDataType(int idCmd)
 		{
 			#pragma warning disable CS8600
+			#pragma warning disable CS8603
 			Type tp = null;
 
-			#warning Aggiungere ricerca tra i Cmd memorizzati
-
-			return tp;
+			foreach(Cmd cmd in _commands)
+			{
+				if(cmd.ID == idCmd)
+				{
+					tp = cmd.Tipo;
+				}
+			}
+				return tp;
+			#pragma warning restore CS8603
 			#pragma warning restore CS8600
+			
 		}
 
 		public string TestSer(object x, Type tp, int com)
@@ -235,7 +218,7 @@ namespace IpcPipes
 			return s;
 		}
 
-		Pacchetto TestDeser(string s)
+		public Pacchetto TestDeser(string s)
 		{
 			Pacchetto p = Pacchetto.Deserialize(s,this);
 			return p;

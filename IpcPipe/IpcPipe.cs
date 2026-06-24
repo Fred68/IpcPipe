@@ -1,9 +1,11 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;				// Pipe		
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +37,7 @@ namespace IpcPipes
 		
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
+
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
 
 		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
@@ -456,9 +459,25 @@ namespace IpcPipes
 			return strb.ToString();
 		}
 
-		public void Test<T>(T obj) where T : class
+		/// <summary>
+		/// Serializza l'oggetto 'obj' per la PipeConnection 'id'
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj">Oggetto generico</param>
+		/// <param name="id">int con l'id della PipeConnection</param>
+		/// <returns></returns>
+		public string Serializza<T>(T obj, int id) where T : class
 		{
+			string str = string.Empty;
+			
+			PipeConnection pc = _pipes.GetByID(1);
+			if(pc != null)
+			{
+				string ss = pc.TestSer(obj,typeof(T),1);
+				str = ss;
 
+			}
+			return str;
 		}
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
 		#warning USARE FUNZIONI GENERICHE

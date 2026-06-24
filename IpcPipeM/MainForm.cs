@@ -2,6 +2,8 @@
 using NcForms;
 using IpcPipes;
 
+using IpcMyData;
+
 namespace IpcPipeM
 {
 	public partial class MainForm:NcForm
@@ -134,7 +136,9 @@ namespace IpcPipeM
 
 		private void button3_Click(object sender,EventArgs e)
 		{
-
+			MyClass pippo = new MyClass(10.5,"antani");
+			//ipc.
 		}
 	}
+
 }
