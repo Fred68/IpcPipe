@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\IpcPipeM\MyClass.cs">
+      <Link>MyClass.cs</Link>
+    </Compile>
     <Compile Include="CFGfw.cs" />
     <Compile Include="SecondForm.cs">
       <SubType>Form</SubType>

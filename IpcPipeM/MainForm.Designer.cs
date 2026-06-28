@@ -36,10 +36,9 @@
 			// 
 			// btCreaPipe
 			// 
-			btCreaPipe.Location = new Point(69,57);
-			btCreaPipe.Margin = new Padding(3,4,3,4);
+			btCreaPipe.Location = new Point(60,43);
 			btCreaPipe.Name = "btCreaPipe";
-			btCreaPipe.Size = new Size(86,31);
+			btCreaPipe.Size = new Size(75,23);
 			btCreaPipe.TabIndex = 0;
 			btCreaPipe.Text = "CreaPipe";
 			btCreaPipe.UseVisualStyleBackColor = true;
@@ -47,10 +46,9 @@
 			// 
 			// btConnette
 			// 
-			btConnette.Location = new Point(69,96);
-			btConnette.Margin = new Padding(3,4,3,4);
+			btConnette.Location = new Point(60,72);
 			btConnette.Name = "btConnette";
-			btConnette.Size = new Size(86,31);
+			btConnette.Size = new Size(75,23);
 			btConnette.TabIndex = 3;
 			btConnette.Text = "Connette [1]";
 			btConnette.UseVisualStyleBackColor = true;
@@ -58,10 +56,9 @@
 			// 
 			// btCreaCmd
 			// 
-			btCreaCmd.Location = new Point(69,135);
-			btCreaCmd.Margin = new Padding(3,4,3,4);
+			btCreaCmd.Location = new Point(60,101);
 			btCreaCmd.Name = "btCreaCmd";
-			btCreaCmd.Size = new Size(86,31);
+			btCreaCmd.Size = new Size(75,23);
 			btCreaCmd.TabIndex = 4;
 			btCreaCmd.Text = "Crea cmd";
 			btCreaCmd.UseVisualStyleBackColor = true;
@@ -69,10 +66,9 @@
 			// 
 			// btInviaCmd
 			// 
-			btInviaCmd.Location = new Point(69,247);
-			btInviaCmd.Margin = new Padding(3,4,3,4);
+			btInviaCmd.Location = new Point(60,130);
 			btInviaCmd.Name = "btInviaCmd";
-			btInviaCmd.Size = new Size(86,31);
+			btInviaCmd.Size = new Size(75,23);
 			btInviaCmd.TabIndex = 5;
 			btInviaCmd.Text = "Invia cmd";
 			btInviaCmd.UseVisualStyleBackColor = true;
@@ -80,14 +76,13 @@
 			// 
 			// MainForm
 			// 
-			AutoScaleDimensions = new SizeF(8F,20F);
+			AutoScaleDimensions = new SizeF(7F,15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(464,415);
+			ClientSize = new Size(406,311);
 			Controls.Add(btInviaCmd);
 			Controls.Add(btCreaCmd);
 			Controls.Add(btConnette);
 			Controls.Add(btCreaPipe);
-			Margin = new Padding(3,4,3,4);
 			Name = "MainForm";
 			Text = "Form1";
 			Load += MainForm_Load;

@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using IpcMyData;
+
 namespace IpcPipeS
 {
 	public partial class SecondForm : Form
@@ -18,6 +20,7 @@ namespace IpcPipeS
 		IpcPipe ipc;
 
 		int idConn_to_master = IpcPipe.ID_ERROR;
+		int idComm_ricevi = IpcPipe.ID_ERROR;
 
 		public SecondForm(CFGfw cfg)
 		{
@@ -50,7 +53,7 @@ namespace IpcPipeS
 			MessageBox.Show("Ciclo arrestato");
 		}
 
-		private void button1_Click(object sender,EventArgs e)
+		private void btCreaPipe_Click(object sender,EventArgs e)
 		{
 			if(ipc!=null)
 			{
@@ -68,7 +71,7 @@ namespace IpcPipeS
 			}
 		}
 
-		private void button2_Click(object sender,EventArgs e)
+		private void btConnette_Click(object sender,EventArgs e)
 		{
 			if(ipc!=null)
 			{
@@ -93,9 +96,19 @@ namespace IpcPipeS
 			}
 		}
 
-		private void button3_Click(object sender,EventArgs e)
+		public bool Ricevi(MyClass myClass)
 		{
+			bool ok = true;
+			MessageBox.Show(myClass.ToString());
+			return ok;
+		}
 
+		private void btCreaCmd_Click(object sender,EventArgs e)
+		{
+			idComm_ricevi = ipc.CreateCommand<MyClass>(10,idConn_to_master,Ricevi,"TEST");
+			string msg = ipc.ToString();
+			MessageBox.Show(msg);
+			return;
 		}
 	}
 }

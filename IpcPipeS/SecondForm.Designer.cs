@@ -28,49 +28,49 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.button1 = new System.Windows.Forms.Button();
-			this.button2 = new System.Windows.Forms.Button();
-			this.button3 = new System.Windows.Forms.Button();
+			this.btCreaPipe = new System.Windows.Forms.Button();
+			this.btConnette = new System.Windows.Forms.Button();
+			this.btCreaCmd = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
-			// button1
+			// btCreaPipe
 			// 
-			this.button1.Location = new System.Drawing.Point(59, 47);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(75, 23);
-			this.button1.TabIndex = 0;
-			this.button1.Text = "Crea Pipe";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.button1_Click);
+			this.btCreaPipe.Location = new System.Drawing.Point(59, 47);
+			this.btCreaPipe.Name = "btCreaPipe";
+			this.btCreaPipe.Size = new System.Drawing.Size(75, 23);
+			this.btCreaPipe.TabIndex = 0;
+			this.btCreaPipe.Text = "Crea Pipe";
+			this.btCreaPipe.UseVisualStyleBackColor = true;
+			this.btCreaPipe.Click += new System.EventHandler(this.btCreaPipe_Click);
 			// 
-			// button2
+			// btConnette
 			// 
-			this.button2.Location = new System.Drawing.Point(59, 77);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(75, 23);
-			this.button2.TabIndex = 1;
-			this.button2.Text = "Connette";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.button2_Click);
+			this.btConnette.Location = new System.Drawing.Point(59, 77);
+			this.btConnette.Name = "btConnette";
+			this.btConnette.Size = new System.Drawing.Size(75, 23);
+			this.btConnette.TabIndex = 1;
+			this.btConnette.Text = "Connette";
+			this.btConnette.UseVisualStyleBackColor = true;
+			this.btConnette.Click += new System.EventHandler(this.btConnette_Click);
 			// 
-			// button3
+			// btCreaCmd
 			// 
-			this.button3.Location = new System.Drawing.Point(59, 107);
-			this.button3.Name = "button3";
-			this.button3.Size = new System.Drawing.Size(75, 23);
-			this.button3.TabIndex = 2;
-			this.button3.Text = "Invia pck";
-			this.button3.UseVisualStyleBackColor = true;
-			this.button3.Click += new System.EventHandler(this.button3_Click);
+			this.btCreaCmd.Location = new System.Drawing.Point(59, 107);
+			this.btCreaCmd.Name = "btCreaCmd";
+			this.btCreaCmd.Size = new System.Drawing.Size(75, 23);
+			this.btCreaCmd.TabIndex = 2;
+			this.btCreaCmd.Text = "CreaCmd";
+			this.btCreaCmd.UseVisualStyleBackColor = true;
+			this.btCreaCmd.Click += new System.EventHandler(this.btCreaCmd_Click);
 			// 
 			// SecondForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(429, 232);
-			this.Controls.Add(this.button3);
-			this.Controls.Add(this.button2);
-			this.Controls.Add(this.button1);
+			this.Controls.Add(this.btCreaCmd);
+			this.Controls.Add(this.btConnette);
+			this.Controls.Add(this.btCreaPipe);
 			this.Name = "SecondForm";
 			this.Text = "Form1";
 			this.ResumeLayout(false);
@@ -79,9 +79,9 @@
 
 		#endregion
 
-		private System.Windows.Forms.Button button1;
-		private System.Windows.Forms.Button button2;
-		private System.Windows.Forms.Button button3;
+		private System.Windows.Forms.Button btCreaPipe;
+		private System.Windows.Forms.Button btConnette;
+		private System.Windows.Forms.Button btCreaCmd;
 	}
 }
 
