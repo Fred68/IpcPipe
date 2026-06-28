@@ -1,8 +1,8 @@
 
-using NcForms;
-using IpcPipes;
-
 using IpcMyData;
+using IpcPipes;
+using NcForms;
+using static Fred68.CfgReader.CfgReader;
 
 namespace IpcPipeM
 {
@@ -87,6 +87,8 @@ namespace IpcPipeM
 			NcMessageBox.Show(this,"Ciclo arrestato");
 		}
 
+
+
 		public bool Esegui(MyClass myClass)
 		{
 			bool ok = true;
@@ -161,8 +163,17 @@ namespace IpcPipeM
 
 		private void button4_Click(object sender,EventArgs e)
 		{
-			
-			//ipc.Serializza<MyClass>(
+			MyClass dati = new MyClass(11.1,"PIPPO");
+			string serializzato;
+			if(!ipc.Serializza<MyClass>(dati,idComm_esegui,idConn_to_slave,out serializzato))
+			{
+				NcMessageBox.Show(this,"Errore serializzazione in stringa","ERROR");	
+			}
+			else
+			{
+				string msg = $"MyClass:\n{dati.ToString()}\nSerializzazione:\n{serializzato}";
+				NcMessageBox.Show(this,msg,"SERIALIZZAZIONE");	
+			}
 			return;
 		}
 	}

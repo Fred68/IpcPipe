@@ -493,7 +493,7 @@ namespace IpcPipes
 		/// <param name="idCommand"></param>
 		/// <param name="idConnection"></param>
 		/// <returns></returns>
-		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class
+		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
 		{
 			bool ok = false;
 			str = string.Empty;
@@ -518,8 +518,24 @@ namespace IpcPipes
 			return ok;
 		}
 		
+
+		public bool Deserializza<T>(string str, int idConnection, out T dato) where T : class, new()
+		{
+			bool ok = false;
+			dato = new T();
+
+			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
+
+			if(pc.ID != ID_ERROR)									// Se trovata
+			{
+				Pacchetto p = pc.DeserializzaPacchetto(str);		
+
+			}
+
+			return ok;
+		}
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
-		#warning USARE FUNZIONI GENERICHE
+		
 
 		#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
 		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
