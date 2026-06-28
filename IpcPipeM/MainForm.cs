@@ -17,7 +17,7 @@ namespace IpcPipeM
 		IpcPipe ipc;
 
 		int idConn_to_slave = IpcPipe.ID_ERROR;         // Id della prima connessione
-
+		int idComm_esegui = IpcPipe.ID_ERROR;
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
 		{
@@ -87,13 +87,20 @@ namespace IpcPipeM
 			NcMessageBox.Show(this,"Ciclo arrestato");
 		}
 
+		public bool Esegui(MyClass myClass)
+		{
+			bool ok = true;
+			MessageBox.Show(myClass.ToString());
+			return ok;
+		}
+
 
 		/// <summary>
 		/// Crea la connessione
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void button1_Click(object sender,EventArgs e)
+		private void btCreaPipe_Click(object sender,EventArgs e)
 		{
 			if(ipc != null)
 			{
@@ -118,7 +125,7 @@ namespace IpcPipeM
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void button2_Click(object sender,EventArgs e)
+		private void btConnette_Click(object sender,EventArgs e)
 		{
 			if(ipc != null)
 			{
@@ -143,27 +150,19 @@ namespace IpcPipeM
 			}
 		}
 
-		public bool Esegui(MyClass myClass)
+
+		private void btCreaCmd_Click(object sender,EventArgs e)
 		{
-			bool ok = true;
-			MessageBox.Show(myClass.ToString());
-			return ok;
-		}
-
-		private void button3_Click(object sender,EventArgs e)
-		{
-			#error COMPLETARE e PROVARE !!!!
-			//ipc.CreateCommand<MyClass>(
-			
-
-
-			// public int CreateCommand<T>(int nCommand, Handler<T> hnd, string name)
+			idComm_esegui = ipc.CreateCommand<MyClass>(10,idConn_to_slave,Esegui,"TEST");
+			string msg = ipc.ToString();
+			NcMessageBox.Show(this,msg);
+			return;
 		}
 
 		private void button4_Click(object sender,EventArgs e)
 		{
 			
-			MyClass pippo = new MyClass(10.5,"antani");
+			//ipc.Serializza<MyClass>(
 			return;
 		}
 	}

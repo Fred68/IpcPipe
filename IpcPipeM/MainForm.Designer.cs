@@ -28,83 +28,83 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			button1 = new Button();
-			button2 = new Button();
-			button3 = new Button();
-			button4 = new Button();
+			btCreaPipe = new Button();
+			btConnette = new Button();
+			btCreaCmd = new Button();
+			btInviaCmd = new Button();
 			SuspendLayout();
 			// 
-			// button1
+			// btCreaPipe
 			// 
-			button1.Location = new Point(69,57);
-			button1.Margin = new Padding(3,4,3,4);
-			button1.Name = "button1";
-			button1.Size = new Size(86,31);
-			button1.TabIndex = 0;
-			button1.Text = "CreaPipe";
-			button1.UseVisualStyleBackColor = true;
-			button1.Click += button1_Click;
+			btCreaPipe.Location = new Point(69,57);
+			btCreaPipe.Margin = new Padding(3,4,3,4);
+			btCreaPipe.Name = "btCreaPipe";
+			btCreaPipe.Size = new Size(86,31);
+			btCreaPipe.TabIndex = 0;
+			btCreaPipe.Text = "CreaPipe";
+			btCreaPipe.UseVisualStyleBackColor = true;
+			btCreaPipe.Click += btCreaPipe_Click;
 			// 
-			// button2
+			// btConnette
 			// 
-			button2.Location = new Point(69,96);
-			button2.Margin = new Padding(3,4,3,4);
-			button2.Name = "button2";
-			button2.Size = new Size(86,31);
-			button2.TabIndex = 3;
-			button2.Text = "Connette [1]";
-			button2.UseVisualStyleBackColor = true;
-			button2.Click += button2_Click;
+			btConnette.Location = new Point(69,96);
+			btConnette.Margin = new Padding(3,4,3,4);
+			btConnette.Name = "btConnette";
+			btConnette.Size = new Size(86,31);
+			btConnette.TabIndex = 3;
+			btConnette.Text = "Connette [1]";
+			btConnette.UseVisualStyleBackColor = true;
+			btConnette.Click += btConnette_Click;
 			// 
-			// button3
+			// btCreaCmd
 			// 
-			button3.Location = new Point(69,135);
-			button3.Margin = new Padding(3,4,3,4);
-			button3.Name = "button3";
-			button3.Size = new Size(86,31);
-			button3.TabIndex = 4;
-			button3.Text = "Crea cmd";
-			button3.UseVisualStyleBackColor = true;
-			button3.Click += button3_Click;
+			btCreaCmd.Location = new Point(69,135);
+			btCreaCmd.Margin = new Padding(3,4,3,4);
+			btCreaCmd.Name = "btCreaCmd";
+			btCreaCmd.Size = new Size(86,31);
+			btCreaCmd.TabIndex = 4;
+			btCreaCmd.Text = "Crea cmd";
+			btCreaCmd.UseVisualStyleBackColor = true;
+			btCreaCmd.Click += btCreaCmd_Click;
 			// 
-			// button4
+			// btInviaCmd
 			// 
-			button4.Location = new Point(69,247);
-			button4.Margin = new Padding(3,4,3,4);
-			button4.Name = "button4";
-			button4.Size = new Size(86,31);
-			button4.TabIndex = 5;
-			button4.Text = "Invia cmd";
-			button4.UseVisualStyleBackColor = true;
-			button4.Click += button4_Click;
+			btInviaCmd.Location = new Point(69,247);
+			btInviaCmd.Margin = new Padding(3,4,3,4);
+			btInviaCmd.Name = "btInviaCmd";
+			btInviaCmd.Size = new Size(86,31);
+			btInviaCmd.TabIndex = 5;
+			btInviaCmd.Text = "Invia cmd";
+			btInviaCmd.UseVisualStyleBackColor = true;
+			btInviaCmd.Click += button4_Click;
 			// 
 			// MainForm
 			// 
 			AutoScaleDimensions = new SizeF(8F,20F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(464,415);
-			Controls.Add(button4);
-			Controls.Add(button3);
-			Controls.Add(button2);
-			Controls.Add(button1);
+			Controls.Add(btInviaCmd);
+			Controls.Add(btCreaCmd);
+			Controls.Add(btConnette);
+			Controls.Add(btCreaPipe);
 			Margin = new Padding(3,4,3,4);
 			Name = "MainForm";
 			Text = "Form1";
 			Load += MainForm_Load;
 			Shown += MainForm_Shown;
-			Controls.SetChildIndex(button1,0);
-			Controls.SetChildIndex(button2,0);
-			Controls.SetChildIndex(button3,0);
-			Controls.SetChildIndex(button4,0);
+			Controls.SetChildIndex(btCreaPipe,0);
+			Controls.SetChildIndex(btConnette,0);
+			Controls.SetChildIndex(btCreaCmd,0);
+			Controls.SetChildIndex(btInviaCmd,0);
 			ResumeLayout(false);
 			PerformLayout();
 		}
 
 		#endregion
 
-		private Button button1;
-		private Button button2;
-		private Button button3;
-		private Button button4;
+		private Button btCreaPipe;
+		private Button btConnette;
+		private Button btCreaCmd;
+		private Button btInviaCmd;
 	}
 }

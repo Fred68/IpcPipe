@@ -229,7 +229,7 @@ namespace IpcPipes
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.Append(_id.ToString());
+			sb.Append($"ID command: {_id.ToString()}");
 			return sb.ToString() ;
 		}
 	}
@@ -260,16 +260,16 @@ namespace IpcPipes
 		/// <summary>
 		/// CTOR
 		/// </summary>
-		/// <param name="cmd"></param>
+		/// <param name="idCmd"></param>
 		/// <param name="handler"></param>
 		/// <param name="name"></param>
-		public Cmd(Handler<T> handler, int cmd = Cmd.ID_UNDEF, string name = "") : base(cmd)
+		public Cmd(Handler<T> handler, int idCmd = Cmd.ID_UNDEF, string name = "") : base(idCmd)
 		{
-			{
 			_handler = new Handler<T>(handler);
 			_name = name;
 			_tp = typeof(T);
-		}
+			int xxx = this._id;
+			return;
 		}
 
 		/// <summary>

@@ -92,6 +92,12 @@ namespace IpcPipes
 				strb.AppendLine($"ReadPipe: {readPipe}");	
 				strb.AppendLine($"Delay: {delay}");
 				strb.AppendLine($"InstanceCheck: {instanceCheck.ToString()}");
+				strb.AppendLine("_pipes:");
+				foreach(PipeConnection pc in _pipes)
+				{
+					strb.AppendLine(pc.ToString());
+				}
+
 				return strb.ToString();
 			}
 		}
@@ -474,7 +480,7 @@ namespace IpcPipes
 			PipeConnection pc = _pipes.GetByID(nConn);
 			if(pc.ID != ID_ERROR)
 			{
-				idCmd = pc.CreateCommand<T>(nConn, hnd, name);
+				idCmd = pc.CreateCommand<T>(nCommand, hnd, name);
 			}
 			return idCmd;
 		}

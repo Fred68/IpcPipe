@@ -35,7 +35,7 @@ namespace IpcPipes
 		bool isSync;
 		int _id_other;
 
-		private static List_ID<Cmd> _commands;					// Lista dei comandi (thread safe)
+		private List_ID<Cmd> _commands;					// Lista dei comandi (thread safe)
 
 
 		#region PROPRIETA'
@@ -132,7 +132,7 @@ namespace IpcPipes
 		/// </summary>
 		static PipeConnection()
 		{
-			_commands = new List_ID<Cmd>();
+			//_commands = new List_ID<Cmd>();
 			ID_ERROR = List_ID<PipeConnection>.ID_ERROR;
 		}
 		/// <summary>
@@ -147,6 +147,7 @@ namespace IpcPipes
 			readPipeName = read_pipe_name;
 			isMaster = is_master;
 			isSync = false;
+			_commands = new List_ID<Cmd>();
 		}
 			
 		/// <summary>
@@ -156,6 +157,7 @@ namespace IpcPipes
 		{
 			ID = ID_ERROR;
 			isSync = false;
+			_commands = new List_ID<Cmd>();
 		}
 		
 		/// <summary>
@@ -165,13 +167,18 @@ namespace IpcPipes
 		public override string ToString()
 		{
 			StringBuilder strb = new StringBuilder();
-			strb.AppendLine($"ID: {_id}");
+			strb.AppendLine($"Pipe ID: {_id}");
 			string mst = isMaster ? "Master" : "Slave";
 			strb.AppendLine($"IsMaster: {mst}");
 			strb.AppendLine($"WritePipe: {WritePipeName}");
 			strb.AppendLine($"ReadPipe: {ReadPipeName}");	
 			strb.AppendLine($"IsSync: {isSync}");
 			strb.AppendLine($"ID_other: {_id_other}");
+			strb.AppendLine("_commands:");
+			foreach(Cmd cmd in _commands)
+			{
+				strb.AppendLine(cmd.ToString());
+			}
 			return strb.ToString();
 		}
 
