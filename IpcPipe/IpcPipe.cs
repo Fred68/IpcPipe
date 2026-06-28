@@ -304,37 +304,37 @@ namespace IpcPipes
 		/// Connette le pipe con numero 'id' alla controparte (master o slave) e crea gli stream reader/writer
 		/// Le funzioni non prevedono un timeout (a meno di usar la versione asincrona)
 		/// /// </summary>
-		/// <param name="id"></param>
+		/// <param name="id">id della connessione</param>
 		/// <returns>true se connessione riuscita, false se fallita</returns>
 		public bool ConnectPipe(int id)
 		{
 			bool ok = false;
-			PipeConnection pp = _pipes.GetByID(id);
-			if(pp.ID != ID_ERROR)
+			PipeConnection pc = _pipes.GetByID(id);
+			if(pc.ID != ID_ERROR)
 			{
 				try
 				{
-					if(pp.IsMaster)
+					if(pc.IsMaster)
 					{
-						pp.PsW.WaitForConnection();
-						pp.PsR.Connect();
+						pc.PsW.WaitForConnection();
+						pc.PsR.Connect();
 					}
 					else
 					{
-						pp.PsR.Connect();
-						pp.PsW.WaitForConnection();
+						pc.PsR.Connect();
+						pc.PsW.WaitForConnection();
 					}
-					pp.Sr = new StreamReader(pp.PsR);
-					pp.Sw = new StreamWriter(pp.PsW);
-					pp.Sw.AutoFlush = true;
+					pc.Sr = new StreamReader(pc.PsR);
+					pc.Sw = new StreamWriter(pc.PsW);
+					pc.Sw.AutoFlush = true;
 
-					if(pp.Sr == null)
+					if(pc.Sr == null)
 					{
-						AddErrMessage($"Errore nella creazione dello StreamReader per la pipe {pp.ReadPipeName}");
+						AddErrMessage($"Errore nella creazione dello StreamReader per la pipe {pc.ReadPipeName}");
 					}
-					if(pp.Sw == null)
+					if(pc.Sw == null)
 					{
-						AddErrMessage($"Errore nella creazione dello StreamWriter per la pipe {pp.WritePipeName}");
+						AddErrMessage($"Errore nella creazione dello StreamWriter per la pipe {pc.WritePipeName}");
 					}
 					ok = true;
 				}
@@ -359,36 +359,36 @@ namespace IpcPipes
 		public bool Sync(int id)
 		{
 			bool ok = false;
-			PipeConnection pp = _pipes.GetByID(id);
-			if(pp.ID != ID_ERROR)
+			PipeConnection pc = _pipes.GetByID(id);
+			if(pc.ID != ID_ERROR)
 			{
 				string msg = string.Empty;
 				int id_other = ID_ERROR;
-				if(pp.IsMaster)
+				if(pc.IsMaster)
 				{														// Se è master:
 					try
 					{
-						pp.Sw.WriteLine(IpcPipe.SyncMsgFromId(pp.ID));	// Manda allo slave il messaggio di sincronizzazione con il proprio ID.
+						pc.Sw.WriteLine(IpcPipe.SyncMsgFromId(pc.ID));	// Manda allo slave il messaggio di sincronizzazione con il proprio ID.
 						#pragma warning disable CS8600
-						msg = pp.Sr.ReadLine();                         // Legge la risposta dallo slave.
+						msg = pc.Sr.ReadLine();                         // Legge la risposta dallo slave.
 						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
 							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (dello slave) dal messaggio
 							if(id_other != ID_ERROR)                    // Se l'id è valido, lo memorizza
 							{
-								pp.ID_other = id_other;
+								pc.ID_other = id_other;
 								ok = true;
 							}
 							else
 							{
-								pp.Sw.WriteLine(STR_SYNC_ERR);			// Se no, invia messaggio di errore
+								pc.Sw.WriteLine(STR_SYNC_ERR);			// Se no, invia messaggio di errore
 								AddErrMessage($"Messaggio di risposta non valido: '{msg}'");
 							}
 						}
 						else
 						{
-							pp.Sw.WriteLine(STR_SYNC_ERR);				// Se è nullo, invia messaggio di errore
+							pc.Sw.WriteLine(STR_SYNC_ERR);				// Se è nullo, invia messaggio di errore
 							AddErrMessage("Messaggio di risposta nullo");
 						}
 					}
@@ -402,27 +402,27 @@ namespace IpcPipes
 					try
 					{
 						#pragma warning disable CS8600
-						msg = pp.Sr.ReadLine();							// Legge il messaggio dal master
+						msg = pc.Sr.ReadLine();							// Legge il messaggio dal master
 						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
 							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (del master) dal messaggio
 							if(id_other != ID_ERROR)                    // Se l'id è valido, lo memorizza
 							{
-								pp.ID_other = id_other;
-								pp.Sw.WriteLine(IpcPipe.SyncMsgFromId(pp.ID));	// Manda al masteril messaggio di sincronizzazione con il proprio ID.
+								pc.ID_other = id_other;
+								pc.Sw.WriteLine(IpcPipe.SyncMsgFromId(pc.ID));	// Manda al masteril messaggio di sincronizzazione con il proprio ID.
 								ok = true;
 							}
 							else
 							{
-								pp.Sw.WriteLine(STR_SYNC_ERR);			// Se no, invia messaggio di errore
+								pc.Sw.WriteLine(STR_SYNC_ERR);			// Se no, invia messaggio di errore
 								AddErrMessage($"Messaggio di risposta non valido: '{msg}'");
 							}
 
 						}
 						else
 						{
-							pp.Sw.WriteLine(STR_SYNC_ERR);				// Se è nullo, invia messaggio di errore
+							pc.Sw.WriteLine(STR_SYNC_ERR);				// Se è nullo, invia messaggio di errore
 							AddErrMessage("Messaggio di risposta nullo");
 						}
 					}
@@ -438,7 +438,7 @@ namespace IpcPipes
 				AddErrMessage($"ID {id} non trovato");
 			}
 
-			pp.IsSync = ok;                 // Imposta lo stato di sincronizzazione della connessione
+			pc.IsSync = ok;                 // Imposta lo stato di sincronizzazione della connessione
 				
 			return ok;
 		}
@@ -460,25 +460,58 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Serializza l'oggetto 'obj' per la PipeConnection 'id'
+		/// Crea il comando nCommand per la connessione nConn, con nome name e gestito dall'handler hnd
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="obj">Oggetto generico</param>
-		/// <param name="id">int con l'id della PipeConnection</param>
+		/// <param name="nCommand">int comando</param>
+		/// <param name="nConn">int connessione</param>
+		/// <param name="hnd">handlet</param>
+		/// <param name="name">nome del comando</param>
 		/// <returns></returns>
-		public string Serializza<T>(T obj, int id) where T : class
+		public int CreateCommand<T>(int nCommand, int nConn, Handler<T> hnd, string name)
 		{
-			string str = string.Empty;
-			
-			PipeConnection pc = _pipes.GetByID(1);
-			if(pc != null)
+			int idCmd = Cmd.ID_ERROR;
+			PipeConnection pc = _pipes.GetByID(nConn);
+			if(pc.ID != ID_ERROR)
 			{
-				string ss = pc.TestSer(obj,typeof(T),1);
-				str = ss;
-
+				idCmd = pc.CreateCommand<T>(nConn, hnd, name);
 			}
-			return str;
+			return idCmd;
 		}
+
+		/// <summary>
+		/// Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj"></param>
+		/// <param name="idCommand"></param>
+		/// <param name="idConnection"></param>
+		/// <returns></returns>
+		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class
+		{
+			bool ok = false;
+			str = string.Empty;
+			
+			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
+
+			if(pc.ID != ID_ERROR)									// Se trovata
+			{
+				Type tp = pc.GetDataType(idCommand);				// Cerca il comando idCommnand ed il tipo di dato
+
+				if(tp != null)
+				{
+					Pacchetto p = new Pacchetto(idCommand, typeof(T), obj);
+					string ss = pc.SerializzaPacchetto(p);
+					if(ss.Length > 1)
+					{
+						str = ss;
+						ok = true;
+					}
+				}
+			}
+			return ok;
+		}
+		
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
 		#warning USARE FUNZIONI GENERICHE
 

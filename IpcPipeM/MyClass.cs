@@ -23,13 +23,24 @@ namespace IpcMyData
 			set { _str = value; }
 		}
 		public MyClass()
-		{}
+		{
+			_str = string.Empty;
+		}
 
 		public MyClass(double x, string str)
 		{
 			_x = x;
 			_str = str;
 		}
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine(_x.ToString());
+			sb.AppendLine(_str);
+			return sb.ToString();
+		}
+
 	}
 
 }

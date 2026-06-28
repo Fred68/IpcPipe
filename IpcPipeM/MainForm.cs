@@ -88,7 +88,11 @@ namespace IpcPipeM
 		}
 
 
-
+		/// <summary>
+		/// Crea la connessione
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void button1_Click(object sender,EventArgs e)
 		{
 			if(ipc != null)
@@ -109,6 +113,11 @@ namespace IpcPipeM
 			}
 		}
 
+		/// <summary>
+		/// Sincronizza la connessione con la controparte
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		private void button2_Click(object sender,EventArgs e)
 		{
 			if(ipc != null)
@@ -134,10 +143,28 @@ namespace IpcPipeM
 			}
 		}
 
+		public bool Esegui(MyClass myClass)
+		{
+			bool ok = true;
+			MessageBox.Show(myClass.ToString());
+			return ok;
+		}
+
 		private void button3_Click(object sender,EventArgs e)
 		{
+			#error COMPLETARE e PROVARE !!!!
+			//ipc.CreateCommand<MyClass>(
+			
+
+
+			// public int CreateCommand<T>(int nCommand, Handler<T> hnd, string name)
+		}
+
+		private void button4_Click(object sender,EventArgs e)
+		{
+			
 			MyClass pippo = new MyClass(10.5,"antani");
-			//ipc.
+			return;
 		}
 	}
 

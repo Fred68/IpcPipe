@@ -18,9 +18,9 @@ namespace ErrorMessages
 		/// <summary>
 		/// Type: message or error
 		/// </summary>
-		public enum Type {Errors = 0,	Messages,	NUM};
+		public enum ErrType {Errors = 0,	Messages,	NUM};
 		
-		public static readonly int N_MESSAGE_TYPES = (int)Type.NUM;
+		public static readonly int N_MESSAGE_TYPES = (int)ErrType.NUM;
 		public static readonly string MESSAGE_SEPARATOR = " - ";
 		
 		protected Stack<ErrorMsg>[] _msg;
@@ -58,10 +58,10 @@ namespace ErrorMessages
 		/// <param name="msg">string</param>
 		/// <param name="dett">string with details</param>
 		/// <param name="typ">error or message</param>
-		public void AddErrMessage(string msg, string dett = "", Type typ = Type.Errors)
+		public void AddErrMessage(string msg, string dett = "", ErrType typ = ErrType.Errors)
 		{
 			int i = (int)typ;
-			if( (i>=0) && (i<(int)Type.NUM) )
+			if( (i>=0) && (i<(int)ErrType.NUM) )
 			{
 				_msg[i].Push(new ErrorMsg(msg, dett));
 			}
@@ -71,15 +71,15 @@ namespace ErrorMessages
 		/// Clear messages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
-		public void ClearErrMessages(Type typ = Type.NUM)
+		public void ClearErrMessages(ErrType typ = ErrType.NUM)
 		{
 			int i = (int)typ;
-			if (i == (int)Type.NUM)
+			if (i == (int)ErrType.NUM)
 			{
 				foreach (Stack<ErrorMsg> lst in _msg)
 					lst.Clear();
 			}
-			else if ((i >= 0) && (i < (int)Type.NUM))
+			else if ((i >= 0) && (i < (int)ErrType.NUM))
 				_msg[i].Clear();
 		}
 
@@ -88,18 +88,18 @@ namespace ErrorMessages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
 		/// <returns></returns>
-		protected IEnumerable<ErrorMsg> Messages(Type typ = Type.NUM)
+		protected IEnumerable<ErrorMsg> Messages(ErrType typ = ErrType.NUM)
 		{
 			int i = (int)typ;
-			if (i == (int)Type.NUM)
+			if (i == (int)ErrType.NUM)
 			{
-				for(int j = 0; j<(int)Type.NUM; j++)
+				for(int j = 0; j<(int)ErrType.NUM; j++)
 				{
 					foreach (ErrorMsg msg in _msg[j])
 						yield return msg;
 				}
 			}
-			else if((i >= 0) && (i < (int)Type.NUM))
+			else if((i >= 0) && (i < (int)ErrType.NUM))
 			{
 				foreach (ErrorMsg msg in _msg[i])
 					yield return msg;
@@ -107,11 +107,11 @@ namespace ErrorMessages
 			yield break;
 		}
 
-		protected List<ErrorMsg> MessageList(Type typ)
+		protected List<ErrorMsg> MessageList(ErrType typ)
 		{
 			List<ErrorMsg> lm = new List<ErrorMsg>();
 			int i = (int) typ;
-			if((i >= 0) && (i < (int)Type.NUM))
+			if((i >= 0) && (i < (int)ErrType.NUM))
 			{
 				foreach (ErrorMsg msg in Messages(typ))
 					lm.Add(msg);
@@ -125,18 +125,18 @@ namespace ErrorMessages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
 		/// <returns></returns>
-		public int GetErrMessageNumber(Type typ = Type.NUM)
+		public int GetErrMessageNumber(ErrType typ = ErrType.NUM)
 		{
 			int n = 0;
 			int i = (int) typ;
-			if (i == (int)Type.NUM)
+			if (i == (int)ErrType.NUM)
 			{
-				for(int j = 0; j<(int)Type.NUM; j++)
+				for(int j = 0; j<(int)ErrType.NUM; j++)
 				{
 					n += _msg[i].Count;
 				}
 			}
-			else if((i >= 0) && (i < (int)Type.NUM))
+			else if((i >= 0) && (i < (int)ErrType.NUM))
 			{
 				n = _msg[i].Count;
 			}
@@ -148,7 +148,7 @@ namespace ErrorMessages
 		/// </summary>
 		/// <param name="typ">errors, messages or both</param>
 		/// <returns></returns>
-		public bool HasMessages(Type typ = Type.NUM)
+		public bool HasMessages(ErrType typ = ErrType.NUM)
 		{
 			bool hasMsg = false;
 			if (GetErrMessageNumber(typ) > 0)
@@ -162,7 +162,7 @@ namespace ErrorMessages
 		/// <returns></returns>
 		public bool HasErrors()
 		{
-			return HasMessages(Type.Errors);
+			return HasMessages(ErrType.Errors);
 		}
 
 		/// <summary>
@@ -171,11 +171,11 @@ namespace ErrorMessages
 		/// <param name="typ">error or message</param>
 		/// <param name="detail">with details ?</param>
 		/// <returns></returns>
-		public string GetLastErrMessage(Type typ = Type.Errors, bool detail = false)
+		public string GetLastErrMessage(ErrType typ = ErrType.Errors, bool detail = false)
 		{
 			StringBuilder sb = new StringBuilder();
 			int i = (int) typ;
-			if((i >= 0) && (i < (int)Type.NUM))
+			if((i >= 0) && (i < (int)ErrType.NUM))
 			{
 				if(HasMessages(typ))
 					sb.Append(_msg[i].Peek().ToString(detail));
@@ -190,22 +190,22 @@ namespace ErrorMessages
 		/// <param name="errTitle">Add line indicating errors or messages</param>
 		/// <param name="details">with details ?</param>
 		/// <returns></returns>
-		public string GetErrMessageString(Type typ = Type.NUM, bool errTitle = true, bool details = true)
+		public string GetErrMessageString(ErrType typ = ErrType.NUM, bool errTitle = true, bool details = true)
 		{
 			StringBuilder sb = new StringBuilder();
-			List<Type> err2proc = new List<Type>();
-			if(typ == Type.NUM)
+			List<ErrType> err2proc = new List<ErrType>();
+			if(typ == ErrType.NUM)
 			{
-				err2proc.Add(Type.Errors);
-				err2proc.Add(Type.Messages);
+				err2proc.Add(ErrType.Errors);
+				err2proc.Add(ErrType.Messages);
 			}
-			else if( ((int)typ >= 0) && ((int)typ < (int)Type.NUM))
+			else if( ((int)typ >= 0) && ((int)typ < (int)ErrType.NUM))
 			{
 				err2proc.Add(typ);
 			}
 			
 			
-			foreach(Type t in err2proc)
+			foreach(ErrType t in err2proc)
 			{
 				if(errTitle)
 					sb.AppendLine(t.ToString());

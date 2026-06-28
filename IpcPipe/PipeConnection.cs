@@ -23,7 +23,7 @@ namespace IpcPipes
 
 	public class PipeConnection : I_ID
 	{
-		public static int ID_ERROR = List_ID<PipeConnection>.ID_ERROR;		// ID di errore per la creazione della connessione
+		public static int ID_ERROR;								// ID di errore per la creazione della connessione
 
 		int _id;
 		bool isMaster;
@@ -35,7 +35,7 @@ namespace IpcPipes
 		bool isSync;
 		int _id_other;
 
-		private static List_ID<Cmd> _commands;								// Lista dei comandi (thread safe)
+		private static List_ID<Cmd> _commands;					// Lista dei comandi (thread safe)
 
 
 		#region PROPRIETA'
@@ -127,7 +127,14 @@ namespace IpcPipes
 		}
 		#endregion
 
-
+		/// <summary>
+		/// CTOR static
+		/// </summary>
+		static PipeConnection()
+		{
+			_commands = new List_ID<Cmd>();
+			ID_ERROR = List_ID<PipeConnection>.ID_ERROR;
+		}
 		/// <summary>
 		/// CTOR
 		/// </summary>
@@ -150,7 +157,11 @@ namespace IpcPipes
 			ID = ID_ERROR;
 			isSync = false;
 		}
-			
+		
+		/// <summary>
+		/// ToString() override
+		/// </summary>
+		/// <returns></returns>
 		public override string ToString()
 		{
 			StringBuilder strb = new StringBuilder();
@@ -165,6 +176,14 @@ namespace IpcPipes
 		}
 
 		#warning Controllare
+		/// <summary>
+		/// CreateCommand<T>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="nCommand">int nCommand id</param>
+		/// <param name="hnd">Handler<T></param>
+		/// <param name="name">Command name</param>
+		/// <returns>command id o ID_ERROR se fallito (id già usato)</returns>
 		public int CreateCommand<T>(int nCommand, Handler<T> hnd, string name)
 		{
 			int idCmd = Cmd.ID_ERROR;
@@ -174,6 +193,13 @@ namespace IpcPipes
 		}
 
 		#warning Controllare
+		/// <summary>
+		/// CreateCommand<T>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="hnd">Handler<T></param>
+		/// <param name="name">Command name</param>
+		/// <returns>command id o ID_UNDEF/ID_ERROR</returns>
 		public int CreateCommand<T>(Handler<T> hnd, string name)
 		{
 			int idCmd = Cmd.ID_UNDEF;
@@ -201,24 +227,33 @@ namespace IpcPipes
 					tp = cmd.Tipo;
 				}
 			}
-				return tp;
+			return tp;
 			#pragma warning restore CS8603
 			#pragma warning restore CS8600
 			
 		}
 
-		public string TestSer(object x, Type tp, int com)
+		/// <summary>
+		/// Serializza un pacchetto
+		/// </summary>
+		/// <param name="p"></param>
+		/// <returns>string</returns>
+		public string SerializzaPacchetto(Pacchetto p)
 		{
 			string s = string.Empty;
-			if(x != null)
+			if(p != null)
 			{
-				Pacchetto p = new Pacchetto(com, tp, x);
 				s = Pacchetto.Serialize(p);
 			}
 			return s;
 		}
 
-		public Pacchetto TestDeser(string s)
+		/// <summary>
+		/// Deserializza un pacchetto da una stringa
+		/// </summary>
+		/// <param name="s"></param>
+		/// <returns>Pacchetto</returns>
+		public Pacchetto DeserializzaPacchetto(string s)
 		{
 			Pacchetto p = Pacchetto.Deserialize(s,this);
 			return p;
