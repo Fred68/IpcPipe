@@ -240,6 +240,7 @@ namespace IpcPipes
 			
 		}
 
+		#if false
 		/// <summary>
 		/// Serializza un pacchetto
 		/// </summary>
@@ -265,6 +266,7 @@ namespace IpcPipes
 			Pacchetto p = Pacchetto.Deserialize(s,this);
 			return p;
 		}
+		#endif
 
 	}
 	#pragma warning restore CS8618 

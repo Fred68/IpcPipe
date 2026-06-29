@@ -14,7 +14,6 @@ namespace IpcPipes
 
 		/********************************************/
 		/* Formato dati su stream:
-		
 				START_PK			inizio pacchetto					
 				dati...				pacchetto in formato stringa. Il tipo di dato o pacchetto è all'interno
 				END_PK				fine pacchetto
@@ -24,8 +23,6 @@ namespace IpcPipes
 				END_PK
 
 				END_TR				fine trasmissione
-
-
 		*/
 		/********************************************/
 
@@ -139,7 +136,7 @@ namespace IpcPipes
 		{
 			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
 			
-			#warning COMPLETARE CON DELEGATE DA DIZIONARIO della PipeConnection
+			
 		}
 
 		/// <summary>

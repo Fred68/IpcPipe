@@ -1,5 +1,8 @@
-﻿using System;
-using System.CodeDom;
+﻿
+using List_ID;
+//using Microsoft.VisualBasic;
+using System;
+//using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,7 +12,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using List_ID;
+
 
 // Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 
@@ -485,13 +488,26 @@ namespace IpcPipes
 			return idCmd;
 		}
 
+		///// <summary>
+		///// Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
+		///// </summary>
+		///// <typeparam name="T"></typeparam>
+		///// <param name="obj"></param>
+		///// <param name="idCommand"></param>
+		///// <param name="idConnection"></param>
+		///// <returns></returns>
+		///// 
+
+
+
 		/// <summary>
-		/// Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
+		///  Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="obj"></param>
 		/// <param name="idCommand"></param>
 		/// <param name="idConnection"></param>
+		/// <param name="str">oggetto serializzato in stringa</param>
 		/// <returns></returns>
 		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
 		{
@@ -507,7 +523,7 @@ namespace IpcPipes
 				if(tp != null)
 				{
 					Pacchetto p = new Pacchetto(idCommand, typeof(T), obj);
-					string ss = pc.SerializzaPacchetto(p);
+					string ss = Pacchetto.Serialize(p);
 					if(ss.Length > 1)
 					{
 						str = ss;
@@ -528,12 +544,13 @@ namespace IpcPipes
 
 			if(pc.ID != ID_ERROR)									// Se trovata
 			{
-				Pacchetto p = pc.DeserializzaPacchetto(str);		
-
+				//Pacchetto p = pc.DeserializzaPacchetto(str);
+				Pacchetto p = Pacchetto.Deserialize(str,pc);
 			}
 
 			return ok;
 		}
+
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
 		
 
