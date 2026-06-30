@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace IpcPipes
 		{
 			ERROR = -1,
 			ERROR_DESERIALIZE = -2,
+			ERROR_TYPE_MISMATCH = -3,
+			ERROR_WRONG_HEADER = -4,
 			UNDEF = 0,
 		}
 
@@ -138,9 +141,9 @@ namespace IpcPipes
 		public static string Serialize(Pacchetto pk)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine(pk.cmd.ToString());
-			sb.AppendLine(pk.tpDat.ToString());
-			if(pk._data != null)
+			sb.AppendLine(pk.cmd.ToString());				// 1° linea: int con id del pacchetto/comando
+			sb.AppendLine(pk.tpDat.ToString());				// 2° linea: Type to string
+			if(pk._data != null)							// 3° linea (in poi): dato serializzato
 			{
 				sb.AppendLine(JsonConvert.SerializeObject(pk._data,pk.tpDat,null));
 			}
@@ -155,38 +158,53 @@ namespace IpcPipes
 		/// <returns></returns>
 		public static Pacchetto Deserialize(string str, PipeConnection pcon)
 		{
-			Pacchetto pk;											// Pacchetto (non allocato)
-			int tipopk = (int)Pacchetto.TPK.UNDEF;					// Tipo di pacchetto (comando)
-			Type type = null;										// Tipo di dato
-			object x = null;										// Oggetto (base)
-
-			int pos = str.IndexOf(Environment.NewLine);											// Cerca il primo fine linea
-			if(pos != -1)										
+			Pacchetto pk;									// Pacchetto (non allocato)
+			int tipopk = (int)Pacchetto.TPK.UNDEF;			// Tipo di pacchetto (comando)
+			Type type = null;								// Tipo di dato
+			object x = null;								// Oggetto (base)
+			int pos1, pos2;									// Posizioni prima e seconda linea
+			
+			try
 			{
-				string prima_linea; 
-				prima_linea= str.Substring(0, pos + Environment.NewLine.Length).TrimEnd();		// Estrae linea (se trovato fine linea)
-				if(int.TryParse(prima_linea, out tipopk))										// Legge il tipo di pacchetto
+				pos1 = str.IndexOf(Environment.NewLine);
+				pos2 = str.IndexOf(Environment.NewLine,(pos1!=-1) ? pos1+Environment.NewLine.Length : 0);
+
+				if( (pos1 != -1) && (pos2 != -1))
 				{
-					str = str.Substring(pos + Environment.NewLine.Length).TrimStart();			// Elimina la prima linea			
-					type = pcon.GetDataType(tipopk);											// Ottiene il tipo di dato in base al tipo di pacchetto
-					
-					#warning CONTROLLARE type... possibile errore se comando non presente
-					try
+					string prima_linea, seconda_linea;
+					prima_linea		= str.Substring(0, pos1 + Environment.NewLine.Length).TrimEnd();
+					seconda_linea	= str.Substring(pos1, pos2-pos1 + Environment.NewLine.Length).Trim();
+
+					str = str.Substring(pos2 + Environment.NewLine.Length).TrimStart();		// Elimina intestazione
+
+					if(int.TryParse(prima_linea, out tipopk))					// Legge il tipo di pacchetto
 					{
-						#error FARE PRIMA DELLE PROVE CON UN PROGETTO CONSOLE
-						x = JsonConvert.DeserializeObject(str,type);							// Deserializza su un object semplice
+						type = pcon.GetDataType(tipopk);						// Ottiene il tipo di dato in base al tipo di pacchetto
+						if(type.FullName == seconda_linea)						// Controlla che i tipi di dato corrispondano
+						{
+							x = JsonConvert.DeserializeObject(str,type);		// Deserializza su un object semplice
+						}
+						else
+						{
+							tipopk = (int)Pacchetto.TPK.ERROR_TYPE_MISMATCH;	// Tipi di dato (pacchetto/comando) diversi
+						}
 					}
-					catch(Exception ex)
+					else
 					{
-						tipopk = (int)Pacchetto.TPK.ERROR;
-						Debug.WriteLine($"Errore nella deserializzazione: {ex.Message}");	
+						tipopk = (int)Pacchetto.TPK.ERROR_WRONG_HEADER;
 					}
 				}
 				else
 				{
-					tipopk = (int)Pacchetto.TPK.ERROR;											// Fallita conversione del numero sulla prima linea 
+					tipopk = (int)Pacchetto.TPK.ERROR_WRONG_HEADER;
 				}
 			}
+			catch (Exception ex)
+			{
+				tipopk = (int)Pacchetto.TPK.ERROR;
+				Debug.WriteLine($"Errore nella deserializzazione: {ex.Message}");	
+			}
+
 			if((x != null) && (type != null))						// Alloca il pacchetto					
 			{
 				pk = new Pacchetto(tipopk, type, x);						
