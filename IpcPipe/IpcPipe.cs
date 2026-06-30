@@ -544,10 +544,17 @@ namespace IpcPipes
 
 			if(pc.ID != ID_ERROR)									// Se trovata
 			{
-				//Pacchetto p = pc.DeserializzaPacchetto(str);
 				Pacchetto p = Pacchetto.Deserialize(str,pc);
+				if(p.isOk)
+				{
+					if(p.Tipo == typeof(T) && (p.Data != null))
+					{
+						dato = (T) p.Data;
+						ok = true;
+					}
+				}
 			}
-
+			
 			return ok;
 		}
 

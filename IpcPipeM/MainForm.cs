@@ -96,7 +96,6 @@ namespace IpcPipeM
 			return ok;
 		}
 
-
 		/// <summary>
 		/// Crea la connessione
 		/// </summary>
@@ -174,6 +173,19 @@ namespace IpcPipeM
 				string msg = $"MyClass:\n{dati.ToString()}\nSerializzazione:\n{serializzato}";
 				NcMessageBox.Show(this,msg,"SERIALIZZAZIONE");	
 			}
+
+			MyClass deserializzato;
+			if(!ipc.Deserializza<MyClass>(serializzato,idConn_to_slave,out deserializzato))
+			{
+				NcMessageBox.Show(this,"Errore deserializzazione da stringa","ERROR");	
+			}
+			else
+			{
+				string msg = $"Myclass:\n{deserializzato.ToString()}";
+				NcMessageBox.Show(this,msg,"DESERIALIZZAZIONE");	
+			}
+
+
 			return;
 		}
 	}

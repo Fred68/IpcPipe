@@ -70,6 +70,14 @@ namespace IpcPipes
 		{
 			get { return tpDat; }
 			protected set { tpDat = value; }
+		
+		}
+		/// <summary>
+		/// Dato (object)
+		/// </summary>
+		public object Data
+		{
+			get { return _data; }
 		}
 
 		/// <summary>
@@ -80,6 +88,7 @@ namespace IpcPipes
 			get { return (cmd > 0); }
 		}
 
+		
 		#endregion
 
 		#region CTORs
@@ -164,6 +173,7 @@ namespace IpcPipes
 					#warning CONTROLLARE type... possibile errore se comando non presente
 					try
 					{
+						#error FARE PRIMA DELLE PROVE CON UN PROGETTO CONSOLE
 						x = JsonConvert.DeserializeObject(str,type);							// Deserializza su un object semplice
 					}
 					catch(Exception ex)
