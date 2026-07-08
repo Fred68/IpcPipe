@@ -216,7 +216,47 @@ namespace IpcPipes
 			return pk;
 		}
 	}
-	
+
+
+	/// <summary>
+	/// Classe Pacchetto, generica
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public class Pacchetto<T>:Pacchetto where T : class
+	{
+
+		#warning Classe Pacchetto<T> forse superflua.
+
+		#region PROPRIETA
+		/// <summary>
+		/// Dato (T), readonly
+		/// </summary>
+		public new T Data
+		{
+			get
+			{
+				return (T)_data;
+			}
+		}
+		#endregion
+
+		/// <summary>
+		/// CTOR
+		/// </summary>
+		/// <param name="cmd">int comando</param>
+		/// <param name="data">T dato</param>
+		#region CTOR
+		public Pacchetto(int cmd, T data) : base(cmd, typeof(T), data)
+		{
+			this._data = data;
+		}
+		#endregion
+
+
+		#warning (superfluo?) Creare le funzioni Pacchetto<T>::Serialize()/Deserialize() (con Newtonsoft Json)
+
+
+	}
 
 	public class Cmd : I_ID
 	{

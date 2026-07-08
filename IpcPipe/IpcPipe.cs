@@ -37,7 +37,16 @@ namespace IpcPipes
 
 	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
-		
+		/********************************************/
+		// Costanti (con carattere ASCII ACK = 006)
+		/********************************************/
+		const string START_PK =	"\x0006*S*";								// Inizio pacchetto
+		const string END_PK =	"\u0006*E*";								// Fine pachetto
+		const string END_TR =	"\u0006*X*";								// Fine trasmissione
+
+		/********************************************/
+		// Variabili statiche
+		/********************************************/
 		private static int _istanze = 0;									// Numero di istanze
 		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
 
@@ -46,6 +55,9 @@ namespace IpcPipes
 		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
 		static DelegateNull segnalaFineCiclo;								// Chiamata dopo l'arresto del ciclo di lettura
 
+		/********************************************/
+		// Variabili
+		/********************************************/
 		Thread pipeReaderThread;											// Thread di lettura
 		static bool _cicloAbilitato;                                        // Attivato thread di lettura delle pipe
 
@@ -488,18 +500,6 @@ namespace IpcPipes
 			return idCmd;
 		}
 
-		///// <summary>
-		///// Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
-		///// </summary>
-		///// <typeparam name="T"></typeparam>
-		///// <param name="obj"></param>
-		///// <param name="idCommand"></param>
-		///// <param name="idConnection"></param>
-		///// <returns></returns>
-		///// 
-
-
-
 		/// <summary>
 		///  Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
 		/// </summary>
@@ -534,7 +534,6 @@ namespace IpcPipes
 			return ok;
 		}
 		
-
 		public bool Deserializza<T>(string str, int idConnection, out T dato) where T : class, new()
 		{
 			bool ok = false;
@@ -559,8 +558,7 @@ namespace IpcPipes
 		}
 
 		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
-		
-
+		#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
 		#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
 		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
 

@@ -27,15 +27,6 @@ namespace IpcPipes
 		/********************************************/
 
 
-		/********************************************/
-		// Costanti (con carattere ASCII ACK = 006)
-		/********************************************/
-		const string START_PK =	"\x0006*S*";						// Inizio pacchetto
-		const string END_PK =	"\u0006*E*";						// Fine pachetto
-		const string END_TR =	"\u0006*X*";						// Fine trasmissione
-
-
-
 		/// <summary>
 		/// Funzione con ciclo di lettura eseguita dal thread secondario
 		/// </summary>
@@ -46,9 +37,6 @@ namespace IpcPipes
 			List<string> lBuff = new List<string>();					// Buffer di lettura
 			bool inPk = false;											// In lettura pacchetto (dopo START_PK)
 
-			#warning AGGIUNGERE LE CLASSI Pacchetto (base) e la generica Pacchetto<T> : Pacchetto there T : class, per incapsulare i dati
-			#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
-			#warning NELLA CLASSE Pacchetto<T> creare le funzioni Serialize e Deserialize (usare Newtonsoft Json)
 			#warning Nella PipeConnection, valutare lista con handler base (per Pacchetto), ma che contengono handler di Pacchetto<T>: PROVARE !!!
 
 			do
@@ -128,7 +116,8 @@ namespace IpcPipes
 		public static string Buff2String(List<string> list)
 		{
 			StringBuilder sb = new StringBuilder();
-			foreach(string s in list)		sb.AppendLine(s);
+			foreach(string s in list)
+				sb.AppendLine(s);
 			return sb.ToString();
 		}
 
