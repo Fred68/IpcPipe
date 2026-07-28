@@ -13,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-
 // Versione di linguaggio C# compatibile con .NET 9.0 e .Net Framework 4.8.1 (non ha tipi nullable)
 
 #pragma warning disable CS8618     // Disabilita warning per campi non inizializzati (non nullable)                                                                      
@@ -30,10 +29,15 @@ namespace IpcPipes
 	/// </summary>
 	public delegate void DelegateNull();
 	/// <summary>
-	/// Delegate con argomento stringa
+	/// Delegate con argomento stringa e intero
 	/// </summary>
 	/// <param name="str"></param>
 	public delegate void DelegateStrInt(string str, int num);
+	/// <summary>
+	/// Delegate con argomento stringa
+	/// </summary>
+	/// <param name="str"></param>
+	public delegate void DelegateString(string str);
 
 	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
@@ -54,6 +58,7 @@ namespace IpcPipes
 
 		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
 		static DelegateNull segnalaFineCiclo;								// Chiamata dopo l'arresto del ciclo di lettura
+		static DelegateString segnalaMessaggio;                             // Chiamata per segnalare un messaggio di testo
 
 		/********************************************/
 		// Variabili

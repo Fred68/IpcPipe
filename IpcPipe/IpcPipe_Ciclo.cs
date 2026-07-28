@@ -123,9 +123,17 @@ namespace IpcPipes
 
 		static void AnalizzaPacchetto(string str, PipeConnection pcon)
 		{
+			segnalaMessaggio("Stringa ricevuta\n" + str);
+
 			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
 			int x;
 			x = 1;
+
+			if(pk != null)
+			{
+				string s = pk.ToString();
+				segnalaMessaggio("Messaggio ricevuto\n" + s);
+			}
 		}
 
 		/// <summary>
@@ -174,6 +182,10 @@ namespace IpcPipes
 			return ok;
 		}
 
-		
+		public void RegistraHandlerMessaggiDiTesto(DelegateString handler)
+		{
+			segnalaMessaggio = handler;
+		}
+
 	}
 }

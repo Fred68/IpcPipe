@@ -1,15 +1,16 @@
-﻿using IpcPipes;
+﻿using IpcMyData;
+using IpcPipes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using IpcMyData;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace IpcPipeS
 {
@@ -31,6 +32,8 @@ namespace IpcPipeS
 			{
 				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
 
+				ipc.RegistraHandlerMessaggiDiTesto(SegnalaMessaggioDiTesto);
+
 				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
 					throw new Exception(ipc.GetLastErrMessage());
@@ -51,6 +54,11 @@ namespace IpcPipeS
 		public void SegnalaFineCiclo()
 		{
 			MessageBox.Show("Ciclo arrestato");
+		}
+
+		public void SegnalaMessaggioDiTesto(string msg)
+		{
+			this.BeginInvoke(new Action(() => MessageBox.Show(this, msg)));
 		}
 
 		private void btCreaPipe_Click(object sender,EventArgs e)

@@ -47,6 +47,8 @@ namespace IpcPipeM
 			try
 			{
 				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
+				
+				ipc.RegistraHandlerMessaggiDiTesto(SegnalaMessaggioDiTesto);
 
 				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
@@ -87,6 +89,10 @@ namespace IpcPipeM
 			NcMessageBox.Show(this,"Ciclo arrestato");
 		}
 
+		public void SegnalaMessaggioDiTesto(string msg)
+		{
+			this.BeginInvoke(new Action(() => NcMessageBox.Show(this,msg)));
+		}
 
 
 		public bool Esegui(MyClass myClass)

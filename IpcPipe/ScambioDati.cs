@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+//using System.IO.Pipelines;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Security.Cryptography;
@@ -132,6 +133,15 @@ namespace IpcPipes
 		}
 		
 		#endregion
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine("Comando: " + cmd);
+			sb.AppendLine("Tipo dato: " + tpDat.ToString());
+			sb.AppendLine("Dato: " + ((_data != null) ? _data.ToString() : "null"));
+			return sb.ToString();
+		}
 
 		/// <summary>
 		/// Serialize data to string
