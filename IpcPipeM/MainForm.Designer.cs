@@ -33,6 +33,7 @@
 			btCreaCmd = new Button();
 			btInviaCmd = new Button();
 			bt_InviaCmd = new Button();
+			btStartCycle = new Button();
 			SuspendLayout();
 			// 
 			// btCreaPipe
@@ -77,7 +78,7 @@
 			// 
 			// bt_InviaCmd
 			// 
-			bt_InviaCmd.Location = new Point(60,159);
+			bt_InviaCmd.Location = new Point(60,234);
 			bt_InviaCmd.Name = "bt_InviaCmd";
 			bt_InviaCmd.Size = new Size(96,23);
 			bt_InviaCmd.TabIndex = 6;
@@ -85,11 +86,22 @@
 			bt_InviaCmd.UseVisualStyleBackColor = true;
 			bt_InviaCmd.Click += bt_InviaCmd_Click;
 			// 
+			// btStartCycle
+			// 
+			btStartCycle.Location = new Point(60,159);
+			btStartCycle.Name = "btStartCycle";
+			btStartCycle.Size = new Size(96,23);
+			btStartCycle.TabIndex = 7;
+			btStartCycle.Text = "Avvia ciclo";
+			btStartCycle.UseVisualStyleBackColor = true;
+			btStartCycle.Click += btStartCycle_Click;
+			// 
 			// MainForm
 			// 
 			AutoScaleDimensions = new SizeF(7F,15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(406,311);
+			Controls.Add(btStartCycle);
 			Controls.Add(bt_InviaCmd);
 			Controls.Add(btInviaCmd);
 			Controls.Add(btCreaCmd);
@@ -104,6 +116,7 @@
 			Controls.SetChildIndex(btCreaCmd,0);
 			Controls.SetChildIndex(btInviaCmd,0);
 			Controls.SetChildIndex(bt_InviaCmd,0);
+			Controls.SetChildIndex(btStartCycle,0);
 			ResumeLayout(false);
 			PerformLayout();
 		}
@@ -115,5 +128,6 @@
 		private Button btCreaCmd;
 		private Button btInviaCmd;
 		private Button bt_InviaCmd;
+		private Button btStartCycle;
 	}
 }

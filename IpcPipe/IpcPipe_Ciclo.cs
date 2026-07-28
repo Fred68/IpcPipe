@@ -124,8 +124,8 @@ namespace IpcPipes
 		static void AnalizzaPacchetto(string str, PipeConnection pcon)
 		{
 			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
-			
-			
+			int x;
+			x = 1;
 		}
 
 		/// <summary>

@@ -110,5 +110,10 @@ namespace IpcPipeS
 			MessageBox.Show(msg);
 			return;
 		}
+
+		private void btStartCycle_Click(object sender,EventArgs e)
+		{
+			ipc.AvviaCiclo();
+		}
 	}
 }

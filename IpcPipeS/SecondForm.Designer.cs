@@ -31,6 +31,7 @@
 			this.btCreaPipe = new System.Windows.Forms.Button();
 			this.btConnette = new System.Windows.Forms.Button();
 			this.btCreaCmd = new System.Windows.Forms.Button();
+			this.btStartCycle = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// btCreaPipe
@@ -63,11 +64,22 @@
 			this.btCreaCmd.UseVisualStyleBackColor = true;
 			this.btCreaCmd.Click += new System.EventHandler(this.btCreaCmd_Click);
 			// 
+			// btStartCycle
+			// 
+			this.btStartCycle.Location = new System.Drawing.Point(59, 165);
+			this.btStartCycle.Name = "btStartCycle";
+			this.btStartCycle.Size = new System.Drawing.Size(101, 23);
+			this.btStartCycle.TabIndex = 3;
+			this.btStartCycle.Text = "Avvia ciclo";
+			this.btStartCycle.UseVisualStyleBackColor = true;
+			this.btStartCycle.Click += new System.EventHandler(this.btStartCycle_Click);
+			// 
 			// SecondForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(429, 232);
+			this.Controls.Add(this.btStartCycle);
 			this.Controls.Add(this.btCreaCmd);
 			this.Controls.Add(this.btConnette);
 			this.Controls.Add(this.btCreaPipe);
@@ -82,6 +94,7 @@
 		private System.Windows.Forms.Button btCreaPipe;
 		private System.Windows.Forms.Button btConnette;
 		private System.Windows.Forms.Button btCreaCmd;
+		private System.Windows.Forms.Button btStartCycle;
 	}
 }
 

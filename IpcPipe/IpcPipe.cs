@@ -583,10 +583,11 @@ namespace IpcPipes
 					sb.AppendLine(END_PK);
 					try
 					{
-						//pc.Sw.AutoFlush = true;
-						#warning ERRORE: RIMANE BLOCCATO IN WRITE() O WRITELINE()
+						pc.Sw.AutoFlush = true;
+						#warning ERRORE: RIMANE BLOCCATO IN WRITE() O WRITELINE(), usare WriteLineAsync() ?
 						pc.Sw.WriteLine(sb.ToString());
-						pc.Sw.Flush();
+						//pc.Sw.WriteLineAsync(sb.ToString());
+						//pc.Sw.Flush();
 						ok = true;
 					}
 					catch(Exception ex)

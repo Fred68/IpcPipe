@@ -202,6 +202,11 @@ namespace IpcPipeM
 				NcMessageBox.Show(this,msg,"INVIO DATI");
 			}
 		}
+
+		private void btStartCycle_Click(object sender,EventArgs e)
+		{
+			ipc.AvviaCiclo();
+		}
 	}
 
 }
