@@ -37,7 +37,7 @@
 			// 
 			this.btCreaPipe.Location = new System.Drawing.Point(59, 47);
 			this.btCreaPipe.Name = "btCreaPipe";
-			this.btCreaPipe.Size = new System.Drawing.Size(75, 23);
+			this.btCreaPipe.Size = new System.Drawing.Size(101, 23);
 			this.btCreaPipe.TabIndex = 0;
 			this.btCreaPipe.Text = "Crea Pipe";
 			this.btCreaPipe.UseVisualStyleBackColor = true;
@@ -47,7 +47,7 @@
 			// 
 			this.btConnette.Location = new System.Drawing.Point(59, 77);
 			this.btConnette.Name = "btConnette";
-			this.btConnette.Size = new System.Drawing.Size(75, 23);
+			this.btConnette.Size = new System.Drawing.Size(101, 23);
 			this.btConnette.TabIndex = 1;
 			this.btConnette.Text = "Connette";
 			this.btConnette.UseVisualStyleBackColor = true;
@@ -57,7 +57,7 @@
 			// 
 			this.btCreaCmd.Location = new System.Drawing.Point(59, 107);
 			this.btCreaCmd.Name = "btCreaCmd";
-			this.btCreaCmd.Size = new System.Drawing.Size(75, 23);
+			this.btCreaCmd.Size = new System.Drawing.Size(101, 23);
 			this.btCreaCmd.TabIndex = 2;
 			this.btCreaCmd.Text = "CreaCmd";
 			this.btCreaCmd.UseVisualStyleBackColor = true;

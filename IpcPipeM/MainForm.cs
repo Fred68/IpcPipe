@@ -133,7 +133,7 @@ namespace IpcPipeM
 				ipc.ClearErrMessages();
 				if(ipc.ConnectPipe(idConn_to_slave))
 				{
-					NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
+					// NcMessageBox.Show(this,"Connessione alla pipe riuscita.");
 
 					if(ipc.Sync(1))
 					{
@@ -160,33 +160,47 @@ namespace IpcPipeM
 			return;
 		}
 
-		private void button4_Click(object sender,EventArgs e)
+		private void btTestSerializz_Click(object sender,EventArgs e)
 		{
 			MyClass dati = new MyClass(11.1,"PIPPO");
 			string serializzato;
 			if(!ipc.Serializza<MyClass>(dati,idComm_esegui,idConn_to_slave,out serializzato))
 			{
-				NcMessageBox.Show(this,"Errore serializzazione in stringa","ERROR");	
+				NcMessageBox.Show(this,"Errore serializzazione in stringa","ERROR");
 			}
 			else
 			{
 				string msg = $"MyClass:\n{dati.ToString()}\nSerializzazione:\n{serializzato}";
-				NcMessageBox.Show(this,msg,"SERIALIZZAZIONE");	
+				NcMessageBox.Show(this,msg,"SERIALIZZAZIONE");
 			}
 
 			MyClass deserializzato;
 			if(!ipc.Deserializza<MyClass>(serializzato,idConn_to_slave,out deserializzato))
 			{
-				NcMessageBox.Show(this,"Errore deserializzazione da stringa","ERROR");	
+				NcMessageBox.Show(this,"Errore deserializzazione da stringa","ERROR");
 			}
 			else
 			{
 				string msg = $"Myclass:\n{deserializzato.ToString()}";
-				NcMessageBox.Show(this,msg,"DESERIALIZZAZIONE");	
+				NcMessageBox.Show(this,msg,"DESERIALIZZAZIONE");
 			}
 
 
 			return;
+		}
+
+		private void bt_InviaCmd_Click(object sender,EventArgs e)
+		{
+			MyClass dati = new MyClass(22.2,"PLUTO");
+			if(!ipc.InviaDati<MyClass>(dati,idComm_esegui,idConn_to_slave))
+			{
+				NcMessageBox.Show(this,"Errore invio dati","ERROR");
+			}
+			else
+			{
+				string msg = $"MyClass:\n{dati.ToString()}\nInviato correttamente.";
+				NcMessageBox.Show(this,msg,"INVIO DATI");
+			}
 		}
 	}
 

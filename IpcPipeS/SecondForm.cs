@@ -77,7 +77,7 @@ namespace IpcPipeS
 			{
 				if(ipc.ConnectPipe(idConn_to_master))
 				{
-					MessageBox.Show(this,"Connessione riuscita");
+					// MessageBox.Show(this,"Connessione riuscita");
 
 					if(ipc.Sync(1))
 					{

@@ -511,14 +511,15 @@ namespace IpcPipes
 		/// <returns></returns>
 		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
 		{
+			#warning Renderla protected, dopo le prove
 			bool ok = false;
 			str = string.Empty;
 			
 			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
 
-			if(pc.ID != ID_ERROR)									// Se trovata
+			if(pc.ID != ID_ERROR)									// Se l'ha trovata...
 			{
-				Type tp = pc.GetDataType(idCommand);				// Cerca il comando idCommnand ed il tipo di dato
+				Type tp = pc.GetDataType(idCommand);				// ...cerca il comando idCommnand ed il tipo di dato
 
 				if(tp != null)
 				{
@@ -533,9 +534,18 @@ namespace IpcPipes
 			}
 			return ok;
 		}
-		
+
+		/// <summary>
+		/// Deserializza la stringa str come oggetto T, se il comando idCommand appartiene alla connessione idConnection
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="str"></param>
+		/// <param name="idConnection"></param>
+		/// <param name="dato"></param>
+		/// <returns></returns>
 		public bool Deserializza<T>(string str, int idConnection, out T dato) where T : class, new()
 		{
+			#warning Renderla protected. dopo le prove
 			bool ok = false;
 			dato = new T();
 
@@ -557,12 +567,44 @@ namespace IpcPipes
 			return ok;
 		}
 
-		#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
-		#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
-		#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
-		#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
 
-		#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
+		public bool InviaDati<T>(T obj, int idCommand, int idConnection) where T : class, new()
+		{
+			bool ok = false;
+			string str = string.Empty;
+			if(Serializza<T>(obj, idCommand, idConnection, out str))
+			{
+				PipeConnection pc = _pipes.GetByID(idConnection);
+				if(pc.ID != ID_ERROR)
+				{
+					StringBuilder sb = new StringBuilder();
+					sb.AppendLine(START_PK);
+					sb.Append(str);
+					sb.AppendLine(END_PK);
+					try
+					{
+						//pc.Sw.AutoFlush = true;
+						#warning ERRORE: RIMANE BLOCCATO IN WRITE() O WRITELINE()
+						pc.Sw.WriteLine(sb.ToString());
+						pc.Sw.Flush();
+						ok = true;
+					}
+					catch(Exception ex)
+					{
+						AddErrMessage(ex.Message);
+					}
+
+				}
+			}
+			return ok;
+		}
+		
+#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
+#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
+#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
+#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
+
+#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
 	}
 }
 

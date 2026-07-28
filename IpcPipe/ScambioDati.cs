@@ -225,7 +225,7 @@ namespace IpcPipes
 	public class Pacchetto<T>:Pacchetto where T : class
 	{
 
-		#warning Classe Pacchetto<T> forse superflua.
+		#warning Classe Pacchetto<T> probabilmente superflua.
 
 		#region PROPRIETA
 		/// <summary>
@@ -252,9 +252,7 @@ namespace IpcPipes
 		}
 		#endregion
 
-
-		#warning (superfluo?) Creare le funzioni Pacchetto<T>::Serialize()/Deserialize() (con Newtonsoft Json)
-
+		#warning Funzioni Pacchetto<T>::Serialize()/Deserialize() superflue.
 
 	}
 
