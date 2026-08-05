@@ -240,33 +240,20 @@ namespace IpcPipes
 			
 		}
 
-		#if false
-		/// <summary>
-		/// Serializza un pacchetto
-		/// </summary>
-		/// <param name="p"></param>
-		/// <returns>string</returns>
-		public string SerializzaPacchetto(Pacchetto p)
+		public void InvokeHandler(int nCmd, object data)
 		{
-			string s = string.Empty;
-			if(p != null)
+			Cmd cmd = _commands.GetByID(nCmd);
+			if(cmd != null)
 			{
-				s = Pacchetto.Serialize(p);
+				int id = cmd.ID;
+				Type tp = cmd.Tipo;
+				
+				if(cmd.Invoke(data))
+				{
+					throw new Exception("Errore nell'invocazione del comando");
+				}
 			}
-			return s;
 		}
-
-		/// <summary>
-		/// Deserializza un pacchetto da una stringa
-		/// </summary>
-		/// <param name="s"></param>
-		/// <returns>Pacchetto</returns>
-		public Pacchetto DeserializzaPacchetto(string s)
-		{
-			Pacchetto p = Pacchetto.Deserialize(s,this);
-			return p;
-		}
-		#endif
 
 	}
 	#pragma warning restore CS8618 

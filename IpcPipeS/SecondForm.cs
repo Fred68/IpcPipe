@@ -107,7 +107,7 @@ namespace IpcPipeS
 		public bool Ricevi(MyClass myClass)
 		{
 			bool ok = true;
-			MessageBox.Show(myClass.ToString());
+			MessageBox.Show("HANDLER DI SECOND FORM:\n"+myClass.ToString());
 			return ok;
 		}
 

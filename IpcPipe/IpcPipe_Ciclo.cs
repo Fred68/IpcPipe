@@ -126,13 +126,36 @@ namespace IpcPipes
 			segnalaMessaggio("Stringa ricevuta\n" + str);
 
 			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
-			int x;
-			x = 1;
 
 			if(pk != null)
 			{
 				string s = pk.ToString();
 				segnalaMessaggio("Messaggio ricevuto\n" + s);
+
+				int cmd = pk.Comando;
+				Type tp = pcon.GetDataType(cmd);
+
+				/************************************************/
+				// Generato da Copilot automaticamente. Probabilmente ok, ma da verificare
+
+				if(tp != null)
+				{
+					if(pk.Tipo == tp)
+					{
+						// Funzione di callback per il comando ricevuto DA SCRIVERE !!!
+						pcon.InvokeHandler(cmd, pk.Data);
+					}
+					else
+					{
+						segnalaMessaggio("Tipo di dato ricevuto non corrispondente a quello atteso");
+					}
+				}
+				else
+				{
+					segnalaMessaggio("Comando ricevuto non registrato");
+				}
+				/************************************************/
+
 			}
 		}
 

@@ -7,6 +7,7 @@ using System.Diagnostics;
 //using System.IO.Pipelines;
 using System.Linq;
 using System.Linq.Expressions;
+//using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -266,6 +267,9 @@ namespace IpcPipes
 
 	}
 
+	/// <summary>
+	/// Classe base per i comandi
+	/// </summary>
 	public class Cmd : I_ID
 	{
 		/// <summary>
@@ -278,7 +282,6 @@ namespace IpcPipes
 		public const int ID_UNDEF = 0;
 
 		protected int _id;
-		
 
 		public int ID
 		{
@@ -302,6 +305,16 @@ namespace IpcPipes
 			_id = id;
 		}
 
+		/// <summary>
+		/// Invoca il comando (indefinito nella classe base), passando l'argomento arg di tipo object
+		/// </summary>
+		/// <param name="arg"></param>
+		/// <returns></returns>
+		public virtual bool Invoke(object arg)
+		{
+			return false;
+		}
+
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
@@ -310,8 +323,19 @@ namespace IpcPipes
 		}
 	}
 
+	/// <summary>
+	/// Delegate per l'esecuzione dei comandi
+	/// </summary>
+	/// <typeparam name="TH"></typeparam>
+	/// <param name="arg"></param>
+	/// <returns></returns>
 	public delegate bool Handler<TH>(TH arg);
 
+
+	/// <summary>
+	/// Classe generica per i comandi, con tipo di dato T
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public class Cmd<T> : Cmd
 	{
 		Handler<T> _handler;
@@ -357,6 +381,30 @@ namespace IpcPipes
 			StringBuilder sb = new StringBuilder();
 			sb.Append($"{base.ToString()}:{_name},{_tp}");
 			return sb.ToString() ;
+		}
+
+		/// <summary>
+		/// Invoca il comando, passando l'argomento arg di tipo object (che deve essere convertibile in T)
+		/// </summary>
+		/// <param name="arg"></param>
+		/// <returns></returns>
+		public override bool Invoke(object arg)
+		{
+			if(_handler != null)
+			{
+				try
+				{
+					return _handler( (T)arg );
+				}
+				catch
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 

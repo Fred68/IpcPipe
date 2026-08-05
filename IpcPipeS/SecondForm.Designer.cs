@@ -50,7 +50,7 @@
 			this.btConnette.Name = "btConnette";
 			this.btConnette.Size = new System.Drawing.Size(101, 23);
 			this.btConnette.TabIndex = 1;
-			this.btConnette.Text = "Connette";
+			this.btConnette.Text = "Connette (1)";
 			this.btConnette.UseVisualStyleBackColor = true;
 			this.btConnette.Click += new System.EventHandler(this.btConnette_Click);
 			// 
