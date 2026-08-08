@@ -182,7 +182,6 @@ namespace IpcPipes
 			return strb.ToString();
 		}
 
-		#warning Controllare
 		/// <summary>
 		/// CreateCommand<T>
 		/// </summary>
@@ -199,7 +198,6 @@ namespace IpcPipes
 			return idCmd;
 		}
 
-		#warning Controllare
 		/// <summary>
 		/// CreateCommand<T>
 		/// </summary>
@@ -231,7 +229,7 @@ namespace IpcPipes
 			{
 				if(cmd.ID == idCmd)
 				{
-					tp = cmd.Tipo;
+					tp = cmd.TypeDat;
 				}
 			}
 			return tp;
@@ -240,15 +238,25 @@ namespace IpcPipes
 			
 		}
 
+		/// <summary>
+		/// Chiama l'handler associato al comando nCmd con i dati
+		/// </summary>
+		/// <param name="nCmd"></param>
+		/// <param name="data"></param>
+		/// <exception cref="Exception"></exception>
 		public void InvokeHandler(int nCmd, object data)
 		{
 			Cmd cmd = _commands.GetByID(nCmd);
 			if(cmd != null)
 			{
 				int id = cmd.ID;
-				Type tp = cmd.Tipo;
+				Type tp = cmd.TypeDat;
 				
-				if(cmd.Invoke(data))
+				if(cmd.Invoke(data))    // Chiama funzione (virtuale) sovrascritta nelle classi derivate generiche Cmd<T>
+				{
+					// Handler invocato con successo
+				}
+				else
 				{
 					throw new Exception("Errore nell'invocazione del comando");
 				}

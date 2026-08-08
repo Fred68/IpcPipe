@@ -56,15 +56,15 @@ namespace IpcPipes
 
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
 
-		static DelegateBool segnalaCiclo;									// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
-		static DelegateNull segnalaFineCiclo;								// Chiamata dopo l'arresto del ciclo di lettura
-		static DelegateString segnalaMessaggio;                             // Chiamata per segnalare un messaggio di testo
+		static DelegateBool signalCycleEnabled;								// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+		static DelegateNull signalEndCycle;									// Chiamata dopo l'arresto del ciclo di lettura
+		static DelegateString signalTxtMessage;                             // Chiamata per segnalare un messaggio di testo
 
 		/********************************************/
 		// Variabili
 		/********************************************/
 		Thread pipeReaderThread;											// Thread di lettura
-		static bool _cicloAbilitato;                                        // Attivato thread di lettura delle pipe
+		static bool _cycleEnabled;											// Attivato thread di lettura delle pipe
 
 		/********************************************/
 		// Messaggi di sincronizzazione
@@ -130,18 +130,18 @@ namespace IpcPipes
 		/// <summary>
 		/// Ciclo (thread di lettura) abilitato
 		/// </summary>
-		public static bool CicloAbilitato
+		public static bool CycleEnabled
 		{
 			get
 			{
-				return _cicloAbilitato;
+				return _cycleEnabled;
 			}
 			set
 			{
-				_cicloAbilitato = value;
-				if (segnalaCiclo != null)
+				_cycleEnabled = value;
+				if (signalCycleEnabled != null)
 				{
-					segnalaCiclo(_cicloAbilitato);
+					signalCycleEnabled(_cycleEnabled);
 				}
 			}
 		}
@@ -154,13 +154,14 @@ namespace IpcPipes
 		/// CTOR
 		/// </summary>
 		/// <exception cref="Exception"></exception>
-		public IpcPipe(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
+		public IpcPipe(DelegateBool signal_cycle, DelegateNull signal_end_cycle)
 		{
 			ClearErrMessages();
 			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
-			if(!CreaCiclo(segnala_ciclo, segnala_fine_ciclo))				// I delegate non possono essere nulli
+			signalTxtMessage = EmptyDelegateString;							// Inizializza il delegate signalTxtMessage con una funzione vuota
+			if(!CreateCycle(signal_cycle, signal_end_cycle))				// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
 		}
 
@@ -374,7 +375,7 @@ namespace IpcPipes
 				AddErrMessage($"ID {id} non trovato");
 			}
 			return ok;
-		}
+		}   
 		
 		/// <summary>
 		/// Sincronizza le connessioni master e slave, scambiando i rispettivi 'id'
@@ -506,7 +507,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		///  Serializza l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
+		///  Serialize l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="obj"></param>
@@ -514,9 +515,8 @@ namespace IpcPipes
 		/// <param name="idConnection"></param>
 		/// <param name="str">oggetto serializzato in stringa</param>
 		/// <returns></returns>
-		public bool Serializza<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
+		protected bool Serialize<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
 		{
-			#warning Renderla protected, dopo le prove
 			bool ok = false;
 			str = string.Empty;
 			
@@ -541,16 +541,15 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Deserializza la stringa str come oggetto T, se il comando idCommand appartiene alla connessione idConnection
+		/// Deserialize la stringa str come oggetto T, se il comando idCommand appartiene alla connessione idConnection
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="str"></param>
 		/// <param name="idConnection"></param>
 		/// <param name="dato"></param>
 		/// <returns></returns>
-		public bool Deserializza<T>(string str, int idConnection, out T dato) where T : class, new()
+		protected bool Deserialize<T>(string str, int idConnection, out T dato) where T : class, new()
 		{
-			#warning Renderla protected. dopo le prove
 			bool ok = false;
 			dato = new T();
 
@@ -561,7 +560,7 @@ namespace IpcPipes
 				Pacchetto p = Pacchetto.Deserialize(str,pc);
 				if(p.isOk)
 				{
-					if(p.Tipo == typeof(T) && (p.Data != null))
+					if(p.TypeDat == typeof(T) && (p.Data != null))
 					{
 						dato = (T) p.Data;
 						ok = true;
@@ -572,12 +571,19 @@ namespace IpcPipes
 			return ok;
 		}
 
-
-		public bool InviaDati<T>(T obj, int idCommand, int idConnection) where T : class, new()
+		/// <summary>
+		/// Invia alla connessione idConnection il comando idCommand con l'oggetto T obj
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="obj">Oggetto di tipo T</param>
+		/// <param name="idCommand">int if del comando</param>
+		/// <param name="idConnection">int if della connessione</param>
+		/// <returns></returns>
+		public bool SendCommand<T>(T obj, int idCommand, int idConnection) where T : class, new()
 		{
 			bool ok = false;
 			string str = string.Empty;
-			if(Serializza<T>(obj, idCommand, idConnection, out str))
+			if(Serialize<T>(obj, idCommand, idConnection, out str))
 			{
 				PipeConnection pc = _pipes.GetByID(idConnection);
 				if(pc.ID != ID_ERROR)
@@ -589,10 +595,7 @@ namespace IpcPipes
 					try
 					{
 						pc.Sw.AutoFlush = true;
-						#warning ERRORE: RIMANE BLOCCATO IN WRITE() O WRITELINE(), usare WriteLineAsync() ?
 						pc.Sw.WriteLine(sb.ToString());
-						//pc.Sw.WriteLineAsync(sb.ToString());
-						//pc.Sw.Flush();
 						ok = true;
 					}
 					catch(Exception ex)
@@ -604,13 +607,24 @@ namespace IpcPipes
 			}
 			return ok;
 		}
-		
-#warning AGGIUNGERE FUNZIONE PER INVIO DI PACCHETTI DI DATI
-#warning NELLA TRASMISSIONE LE LINEE START_PK E END_PK NON FANNO PARTE DEL PACCHETTO. Il tipo di pacchetto è al suo interno.
-#warning AGGIUNGERE GESTIONE DEI Comandi (specifici per connessione)
-#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
 
+#warning Aggiungere SendCloseConnection(int idConnection) per chiudere la connessione e rimuoverla dalla lista _pipes
+#warning Aggiungere SendPing(int idConnection) per inviare un ping e ricevere un pong (per verificare che la connessione sia attiva)
+#warning Aggiungere SendPong(int idConnection) per inviare un pong in risposta ad un ping ricevuto
+
+
+
+
+
+#warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
 #warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
+
+
+		/// <summary>
+		/// Hanlder vuoto per inizializzare static DelegateString signalTxtMessage 
+		/// </summary>
+		/// <param name="str"></param>
+		public static void EmptyDelegateString(string str) {}
 	}
 }
 

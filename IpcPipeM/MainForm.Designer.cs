@@ -31,7 +31,6 @@
 			btCreaPipe = new Button();
 			btConnette = new Button();
 			btCreaCmd = new Button();
-			btInviaCmd = new Button();
 			bt_InviaCmd = new Button();
 			btStartCycle = new Button();
 			SuspendLayout();
@@ -66,16 +65,6 @@
 			btCreaCmd.UseVisualStyleBackColor = true;
 			btCreaCmd.Click += btCreaCmd_Click;
 			// 
-			// btInviaCmd
-			// 
-			btInviaCmd.Location = new Point(60,130);
-			btInviaCmd.Name = "btInviaCmd";
-			btInviaCmd.Size = new Size(96,23);
-			btInviaCmd.TabIndex = 5;
-			btInviaCmd.Text = "Test Serializz.";
-			btInviaCmd.UseVisualStyleBackColor = true;
-			btInviaCmd.Click += btTestSerializz_Click;
-			// 
 			// bt_InviaCmd
 			// 
 			bt_InviaCmd.Location = new Point(60,234);
@@ -103,7 +92,6 @@
 			ClientSize = new Size(406,311);
 			Controls.Add(btStartCycle);
 			Controls.Add(bt_InviaCmd);
-			Controls.Add(btInviaCmd);
 			Controls.Add(btCreaCmd);
 			Controls.Add(btConnette);
 			Controls.Add(btCreaPipe);
@@ -114,7 +102,6 @@
 			Controls.SetChildIndex(btCreaPipe,0);
 			Controls.SetChildIndex(btConnette,0);
 			Controls.SetChildIndex(btCreaCmd,0);
-			Controls.SetChildIndex(btInviaCmd,0);
 			Controls.SetChildIndex(bt_InviaCmd,0);
 			Controls.SetChildIndex(btStartCycle,0);
 			ResumeLayout(false);
@@ -126,7 +113,6 @@
 		private Button btCreaPipe;
 		private Button btConnette;
 		private Button btCreaCmd;
-		private Button btInviaCmd;
 		private Button bt_InviaCmd;
 		private Button btStartCycle;
 	}

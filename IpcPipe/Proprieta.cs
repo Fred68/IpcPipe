@@ -13,7 +13,7 @@ namespace ScambioDati
 	public class Proprieta
 	{
 		/// <summary>
-		/// Tipo di variabile
+		/// TypeDat di variabile
 		/// </summary>
 		public enum TypeVar
 		{
@@ -46,7 +46,7 @@ namespace ScambioDati
 		Op		_op;	
 
 		/// <summary>
-		/// Tipo di dato di una variabile.
+		/// TypeDat di dato di una variabile.
 		/// </summary>
 		/// <param name="x"></param>
 		/// <returns></returns>
@@ -57,7 +57,7 @@ namespace ScambioDati
 
 		#region PROPS
 		/// <summary>
-		/// Proprietà: Tipo di dato
+		/// Proprietà: TypeDat di dato
 		/// </summary>
 		public TypeVar Type
 		{
@@ -96,7 +96,7 @@ namespace ScambioDati
 						_obj = (DateTime) value;
 						break;
 					default:
-						throw new NotImplementedException("Tipo dato non definito");
+						throw new NotImplementedException("TypeDat dato non definito");
 				}
 			}
 		}
@@ -174,7 +174,7 @@ namespace ScambioDati
 			}
 			else
 			{
-				throw new Exception($"Tipo: {_d.GetType().ToString()} non gestito.");
+				throw new Exception($"TypeDat: {_d.GetType().ToString()} non gestito.");
 			}
 
 			_obj = _d;
@@ -279,7 +279,7 @@ namespace ScambioDati
 				//break;
 				
 				default:
-					throw new NotImplementedException("Tipo dato non definito");
+					throw new NotImplementedException("TypeDat dato non definito");
 			}
 		}
 

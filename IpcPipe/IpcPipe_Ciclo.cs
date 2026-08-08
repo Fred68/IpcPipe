@@ -1,4 +1,5 @@
-﻿//using ScambioDati;
+﻿
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,14 +31,12 @@ namespace IpcPipes
 		/// <summary>
 		/// Funzione con ciclo di lettura eseguita dal thread secondario
 		/// </summary>
-		public static void LeggiStream()
+		public static void ReadStream()
 		{
 			#warning Il Thread pipeReaderThread va arrestato, alla fine (Se5 non lo fa).
 
 			List<string> lBuff = new List<string>();					// Buffer di lettura
 			bool inPk = false;											// In lettura pacchetto (dopo START_PK)
-
-			#warning Nella PipeConnection, valutare lista con handler base (per Pacchetto), ma che contengono handler di Pacchetto<T>: PROVARE !!!
 
 			do
 			{
@@ -67,7 +66,7 @@ namespace IpcPipes
 										case END_PK:					// Fine pacchetto (non aggiunto al buffer)
 										{	
 											inPk = false;
-											AnalizzaPacchetto(Buff2String(lBuff), ppCon);
+											AnalysePacket(Buff2String(lBuff), ppCon);
 											lBuff.Clear();
 										}
 										break;
@@ -75,7 +74,7 @@ namespace IpcPipes
 										{
 											lBuff.Clear();
 											inPk = false;
-											CicloAbilitato = false;		// Modifica la proprietà (richiama altre funzioni)
+											CycleEnabled = false;		// Modifica la proprietà (richiama altre funzioni)
 										}
 										break;
 										
@@ -94,17 +93,16 @@ namespace IpcPipes
 						catch ( Exception ex )
 						{
 							linea = string.Empty;
-
-							#warning Segnalare l'errore, ma non arrestare il ciclo...
+							signalTxtMessage("Errore lettura linea da pipe " + ppCon.ToString() + "\n" + ex.Message);
 						}
 					} // ...if pipe sincronizzata
 				} // ...foreach tra le connessioni
 			}
-			while(_cicloAbilitato);
+			while(_cycleEnabled);
 
-			if(segnalaFineCiclo != null)
+			if(signalEndCycle != null)
 			{
-				segnalaFineCiclo();
+				signalEndCycle();
 			}
 		}
 		
@@ -121,18 +119,18 @@ namespace IpcPipes
 			return sb.ToString();
 		}
 
-		static void AnalizzaPacchetto(string str, PipeConnection pcon)
+		static void AnalysePacket(string str, PipeConnection pcon)
 		{
-			segnalaMessaggio("Stringa ricevuta\n" + str);
+			//signalTxtMessage("Stringa ricevuta\n" + str);
 
 			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
 
 			if(pk != null)
 			{
 				string s = pk.ToString();
-				segnalaMessaggio("Messaggio ricevuto\n" + s);
+				//signalTxtMessage("Messaggio ricevuto\n" + s);
 
-				int cmd = pk.Comando;
+				int cmd = pk.Command;
 				Type tp = pcon.GetDataType(cmd);
 
 				/************************************************/
@@ -140,19 +138,18 @@ namespace IpcPipes
 
 				if(tp != null)
 				{
-					if(pk.Tipo == tp)
+					if(pk.TypeDat == tp)
 					{
-						// Funzione di callback per il comando ricevuto DA SCRIVERE !!!
 						pcon.InvokeHandler(cmd, pk.Data);
 					}
 					else
 					{
-						segnalaMessaggio("Tipo di dato ricevuto non corrispondente a quello atteso");
+						signalTxtMessage("TypeDat di dato ricevuto non corrispondente a quello atteso");
 					}
 				}
 				else
 				{
-					segnalaMessaggio("Comando ricevuto non registrato");
+					signalTxtMessage("Command ricevuto non registrato");
 				}
 				/************************************************/
 
@@ -162,11 +159,13 @@ namespace IpcPipes
 		/// <summary>
 		/// Abilita il ciclo di lettura e lo avvia
 		/// </summary>
-		public void AvviaCiclo()
+		public void StartCycle()
 		{
-			CicloAbilitato = true;
+			CycleEnabled = true;
 			pipeReaderThread.Start();
 		}
+
+		#warning Aggiungere StopCycle(bool safe = true) per arrestare il ciclo di lettura (e il thread) in modo sicuro
 
 		/// <summary>
 		/// Crea il ciclo di lettura
@@ -174,13 +173,13 @@ namespace IpcPipes
 		/// <param name="segnala_ciclo"></param>
 		/// <param name="segnala_fine_ciclo"></param>
 		/// <returns></returns>
-		public bool CreaCiclo(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
+		public bool CreateCycle(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
 		{
 			bool ok = true;
 
 			if(segnala_ciclo != null)
 			{
-				segnalaCiclo = segnala_ciclo;
+				signalCycleEnabled = segnala_ciclo;
 			}
 			else
 			{
@@ -190,7 +189,7 @@ namespace IpcPipes
 
 			if(segnala_fine_ciclo != null)
 			{
-				segnalaFineCiclo = segnala_fine_ciclo;
+				signalEndCycle = segnala_fine_ciclo;
 			}
 			else
 			{
@@ -200,14 +199,14 @@ namespace IpcPipes
 
 			if(ok)
 			{
-				pipeReaderThread = new Thread(LeggiStream);
+				pipeReaderThread = new Thread(ReadStream);
 			}
 			return ok;
 		}
 
-		public void RegistraHandlerMessaggiDiTesto(DelegateString handler)
+		public void RegisterTextMsgHandler(DelegateString handler)
 		{
-			segnalaMessaggio = handler;
+			signalTxtMessage = handler;
 		}
 
 	}

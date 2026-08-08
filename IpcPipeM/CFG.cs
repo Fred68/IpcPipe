@@ -33,6 +33,7 @@ namespace IpcPipeM
 		public List<string> PIPE_out;
 		public List<string> PIPE_in;
 		public bool PIPE_master;
+		public int PIPE_delay;
 		//public int PIPE_timeout;		// ms
 
 	}

@@ -4,15 +4,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-//using System.IO.Pipelines;
 using System.Linq;
 using System.Linq.Expressions;
-//using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static System.Net.WebRequestMethods;
 
 
 #pragma warning disable CS8618
@@ -38,7 +35,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Tipo di comando del pacchetto
+		/// TypeDat di comando del pacchetto
 		/// Se tipo > 0: ok, comando
 		/// Se tipo == 0: indefinito
 		/// Se tipo < 0: errore
@@ -46,7 +43,7 @@ namespace IpcPipes
 		protected int cmd;
 
 		/// <summary>
-		/// Tipo di dato
+		/// TypeDat di dato
 		/// </summary>
 		protected Type tpDat;
 
@@ -57,21 +54,21 @@ namespace IpcPipes
 
 		#region PROPRIETA'
 		/// <summary>
-		/// Proprietà: Comando
+		/// Proprietà: Command
 		/// > 0: ok
 		/// == 0: indefinito
 		/// < 0: errore
 		/// </summary>
-		public int Comando
+		public int Command
 		{
 			get { return cmd; }
 			protected set { cmd = value; }	
 		}
 	
 		/// <summary>
-		/// Tipo di dato
+		/// TypeDat di dato
 		/// </summary>
-		public Type Tipo
+		public Type TypeDat
 		{
 			get { return tpDat; }
 			protected set { tpDat = value; }
@@ -86,7 +83,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// isOk true se Tipo > 1
+		/// isOk true se TypeDat > 1
 		/// </summary>
 		public bool isOk
 		{
@@ -138,8 +135,8 @@ namespace IpcPipes
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine("Comando: " + cmd);
-			sb.AppendLine("Tipo dato: " + tpDat.ToString());
+			sb.AppendLine("Command: " + cmd);
+			sb.AppendLine("TypeDat dato: " + tpDat.ToString());
 			sb.AppendLine("Dato: " + ((_data != null) ? _data.ToString() : "null"));
 			return sb.ToString();
 		}
@@ -170,8 +167,8 @@ namespace IpcPipes
 		public static Pacchetto Deserialize(string str, PipeConnection pcon)
 		{
 			Pacchetto pk;									// Pacchetto (non allocato)
-			int tipopk = (int)Pacchetto.TPK.UNDEF;			// Tipo di pacchetto (comando)
-			Type type = null;								// Tipo di dato
+			int tipopk = (int)Pacchetto.TPK.UNDEF;			// TypeDat di pacchetto (comando)
+			Type type = null;								// TypeDat di dato
 			object x = null;								// Oggetto (base)
 			int pos1, pos2;									// Posizioni prima e seconda linea
 			
@@ -193,7 +190,7 @@ namespace IpcPipes
 						type = pcon.GetDataType(tipopk);						// Ottiene il tipo di dato in base al tipo di pacchetto
 						if(type.FullName == seconda_linea)						// Controlla che i tipi di dato corrispondano
 						{
-							x = JsonConvert.DeserializeObject(str,type);		// Deserializza su un object semplice
+							x = JsonConvert.DeserializeObject(str,type);		// Deserialize su un object semplice
 						}
 						else
 						{
@@ -228,7 +225,8 @@ namespace IpcPipes
 		}
 	}
 
-
+	#region SUPERFLUA: class Pacchetto<T>:Pacchetto 
+	#if false
 	/// <summary>
 	/// Classe Pacchetto, generica
 	/// </summary>
@@ -236,7 +234,7 @@ namespace IpcPipes
 	public class Pacchetto<T>:Pacchetto where T : class
 	{
 
-		#warning Classe Pacchetto<T> probabilmente superflua.
+	#warning Classe Pacchetto<T> probabilmente superflua.
 
 		#region PROPRIETA
 		/// <summary>
@@ -263,9 +261,11 @@ namespace IpcPipes
 		}
 		#endregion
 
-		#warning Funzioni Pacchetto<T>::Serialize()/Deserialize() superflue.
+	#warning Funzioni Pacchetto<T>::Serialize()/Deserialize() superflue.
 
 	}
+	#endif
+	#endregion
 
 	/// <summary>
 	/// Classe base per i comandi
@@ -289,9 +289,8 @@ namespace IpcPipes
 			set {_id = value;}
 		}
 
-		public virtual Type Tipo
+		public virtual Type TypeDat
 		{
-			#warning Questa funzione non dovrebbe mai essere chiamata
 			get { return (Type)null; }
 			set {}
 		}
@@ -349,9 +348,8 @@ namespace IpcPipes
 			set {_name = value;}
 		}
 
-		public override Type Tipo
+		public override Type TypeDat
 		{
-			#warning usare public e protected nella classe base e new al posto di override
 			get { return _tp; }
 			set { _tp = value; }
 		}

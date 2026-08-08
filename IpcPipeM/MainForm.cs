@@ -17,7 +17,9 @@ namespace IpcPipeM
 		IpcPipe ipc;
 
 		int idConn_to_slave = IpcPipe.ID_ERROR;         // Id della prima connessione
-		int idComm_esegui = IpcPipe.ID_ERROR;
+		
+		int idComm_esegui = IpcPipe.ID_ERROR;			// Id dei comandi
+		int idComm_ricevi = IpcPipe.ID_ERROR;
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
 		{
@@ -36,19 +38,18 @@ namespace IpcPipeM
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 
-			nfo = new IpcPipe.Info(cfg.PIPE_out[0],
-									cfg.PIPE_in[0],
-									cfg.PIPE_master,
-#warning Impostare il delay da configurazione
-									100,
-									IpcPipe.InstanceCheck.Unique
-									);  // Path.GetRandomFileName().Replace(".","") 
+			nfo = new IpcPipe.Info(cfg.PIPE_out[0],                 // write pipe
+									cfg.PIPE_in[0],                 // read pipe
+									cfg.PIPE_master,                // is master
+									cfg.PIPE_delay,					// delay in ms
+									IpcPipe.InstanceCheck.Unique    // instance check
+									);
 
 			try
 			{
 				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
 				
-				ipc.RegistraHandlerMessaggiDiTesto(SegnalaMessaggioDiTesto);
+				ipc.RegisterTextMsgHandler(SegnalaMessaggioDiTesto);
 
 				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
@@ -95,12 +96,6 @@ namespace IpcPipeM
 		}
 
 
-		public bool Esegui(MyClass myClass)
-		{
-			bool ok = true;
-			MessageBox.Show(myClass.ToString());
-			return ok;
-		}
 
 		/// <summary>
 		/// Crea la connessione
@@ -160,59 +155,48 @@ namespace IpcPipeM
 
 		private void btCreaCmd_Click(object sender,EventArgs e)
 		{
-			idComm_esegui = ipc.CreateCommand<MyClass>(10,idConn_to_slave,Esegui,"TEST");
+			idComm_esegui = ipc.CreateCommand<MyClass>(10,idConn_to_slave,Vuoto,"Vuoto");
+			idComm_ricevi = ipc.CreateCommand<MyClass>(15,idConn_to_slave,Ricevi,"Ricevi");
 			string msg = ipc.ToString();
 			NcMessageBox.Show(this,msg);
-			return;
-		}
-
-		private void btTestSerializz_Click(object sender,EventArgs e)
-		{
-			MyClass dati = new MyClass(11.1,"PIPPO");
-			string serializzato;
-			if(!ipc.Serializza<MyClass>(dati,idComm_esegui,idConn_to_slave,out serializzato))
-			{
-				NcMessageBox.Show(this,"Errore serializzazione in stringa","ERROR");
-			}
-			else
-			{
-				string msg = $"MyClass:\n{dati.ToString()}\nSerializzazione:\n{serializzato}";
-				NcMessageBox.Show(this,msg,"SERIALIZZAZIONE");
-			}
-
-			MyClass deserializzato;
-			if(!ipc.Deserializza<MyClass>(serializzato,idConn_to_slave,out deserializzato))
-			{
-				NcMessageBox.Show(this,"Errore deserializzazione da stringa","ERROR");
-			}
-			else
-			{
-				string msg = $"Myclass:\n{deserializzato.ToString()}";
-				NcMessageBox.Show(this,msg,"DESERIALIZZAZIONE");
-			}
-
-
 			return;
 		}
 
 		private void bt_InviaCmd_Click(object sender,EventArgs e)
 		{
 			MyClass dati = new MyClass(22.2,"PLUTO");
-			if(!ipc.InviaDati<MyClass>(dati,idComm_esegui,idConn_to_slave))
+			if(!ipc.SendCommand<MyClass>(dati,idComm_esegui,idConn_to_slave))
 			{
 				NcMessageBox.Show(this,"Errore invio dati","ERROR");
-			}
-			else
-			{
-				string msg = $"MyClass:\n{dati.ToString()}\nInviato correttamente.";
-				NcMessageBox.Show(this,msg,"INVIO DATI");
 			}
 		}
 
 		private void btStartCycle_Click(object sender,EventArgs e)
 		{
-			ipc.AvviaCiclo();
+			ipc.StartCycle();
 		}
+
+		
+		
+		#region Handler dei comandi
+
+		public bool Vuoto(MyClass myClass) {return true;}
+
+		public bool Esegui(MyClass myClass)
+		{
+			bool ok = true;
+			NcMessageBox.Show(this,"MainForm::Esegui:\n" + myClass.ToString());
+			return ok;
+		}
+
+		public bool Ricevi(MyClass myClass)
+		{
+			bool ok = true;
+			NcMessageBox.Show(this,"MainForm::Ricevi:\n" + myClass.ToString());
+			return ok;
+		}
+
+		#endregion
 	}
 
 }
