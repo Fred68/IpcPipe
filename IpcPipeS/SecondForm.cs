@@ -36,6 +36,7 @@ namespace IpcPipeS
 				ipc = new IpcPipe(new IpcPipe.CycleDelegates(SegnalaStatCiclo,SegnalaFineCiclo));
 
 				ipc.RegisterTextMsgHandler(SegnalaMessaggioDiTesto);
+				ipc.RegisterPongHandler(SegnalaPong);
 
 				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
@@ -62,6 +63,11 @@ namespace IpcPipeS
 		public void SegnalaMessaggioDiTesto(string msg)
 		{
 			this.BeginInvoke(new Action(() => MessageBox.Show(this, msg)));
+		}
+
+		public void SegnalaPong(int id)
+		{
+			this.BeginInvoke(new Action(() => MessageBox.Show(this, $"Pong da connessione {id}")));
 		}
 
 		private void btCreaPipe_Click(object sender,EventArgs e)
@@ -147,5 +153,14 @@ namespace IpcPipeS
 
 		#endregion
 
+		private void listaErroriToolStripMenuItem_Click(object sender,EventArgs e)
+		{
+			MessageBox.Show(this,ipc.GetErrMessageString(),"ERROR");
+		}
+
+		private void cancellaErroriToolStripMenuItem_Click(object sender,EventArgs e)
+		{
+			ipc.ClearErrMessages();
+		}
 	}
 }

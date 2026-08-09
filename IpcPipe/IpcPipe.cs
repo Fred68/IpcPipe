@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Pipes;				// Pipe		
 using System.Linq;
 using System.Net.NetworkInformation;
+//using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,6 +39,11 @@ namespace IpcPipes
 	/// </summary>
 	/// <param name="str"></param>
 	public delegate void DelegateString(string str);
+	/// <summary>
+	/// Delegate con argomento intero
+	/// </summary>
+	/// <param name="i"></param>
+	public delegate void DelegateInt(int i);
 
 	public partial class IpcPipe : ErrorMessages.ErrorMessages
 	{
@@ -84,9 +90,12 @@ namespace IpcPipes
 
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
 
+		// Handler obblicatori
 		static DelegateBool signalCycleEnabled;								// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
 		static DelegateNull signalEndCycle;									// Chiamata dopo hl'arresto del ciclo di lettura
+		// Handler opzionali
 		static DelegateString signalTxtMessage;                             // Chiamata per segnalare un messaggio di testo
+		static DelegateInt signalPong;										// Chiamata per segnalare la risposta ad un ping
 
 		/********************************************/
 		// Variabili
@@ -157,13 +166,15 @@ namespace IpcPipes
 		{
 			public DelegateBool segnala_ciclo;
 			public DelegateNull segnala_fine_ciclo;
-
+			
 			public CycleDelegates(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
 			{
 				this.segnala_ciclo = segnala_ciclo;
 				this.segnala_fine_ciclo = segnala_fine_ciclo;
 			}
 		}
+
+		public enum PingPong {Ping, Pong}
 
 		/********************************************/
 		// Proprietà
@@ -206,16 +217,16 @@ namespace IpcPipes
 		/// </summary>
 		/// <exception cref="Exception"></exception>
 		
-		#warning Racchiudere i delegate essenziali (signal_cycle, signal_end_cycle, signal_pong...) in una struct
-		
-		//public IpcPipe(DelegateBool signal_cycle, DelegateNull signal_end_cycle)
 		public IpcPipe(CycleDelegates delegs)
 		{
 			ClearErrMessages();
 			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
-			signalTxtMessage = EmptyDelegateString;							// Inizializza il delegate signalTxtMessage con una funzione vuota
+			
+			signalTxtMessage = EmptyDelegateString;							// Inizializza i delegate opzionali con una funzione vuota
+			signalPong = EmptyDelegateInt;
+
 			if(!CreateCycle(delegs))				// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
 		}
@@ -517,11 +528,58 @@ namespace IpcPipes
 			}
 			else
 			{
-				AddErrMessage($"ID {id} non trovato");
+				AddErrMessage($"Connessione {id} non trovata");
 			}
 
 			pc.IsSync = ok;                 // Imposta lo stato di sincronizzazione della connessione
 				
+			return ok;
+		}
+		
+		/// <summary>
+		/// Ping connection id
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public bool Ping(int id, PingPong pp)
+		{
+			bool ok = false;
+			PipeConnection pc = _pipes.GetByID(id);
+			if(pc.ID != ID_ERROR)
+			{
+				if(pc.IsSync)
+				{
+					StringBuilder sb = new StringBuilder();
+
+					switch(pp)
+					{
+						case PingPong.Ping:
+							sb.AppendLine(PING_PK);
+						break;
+						case PingPong.Pong:
+							sb.AppendLine(PONG_PK);
+						break;
+					}
+					try
+					{
+						pc.Sw.AutoFlush = true;
+						pc.Sw.WriteLine(sb.ToString());
+						ok = true;
+					}
+					catch(Exception ex)
+					{
+						AddErrMessage(ex.Message);
+					}
+				}
+				else
+				{
+					AddErrMessage($"Connessione {id} non sincronizzata");
+				}
+			}
+			else
+			{
+				AddErrMessage($"Connessione {id} non trovata");
+			}
 			return ok;
 		}
 
@@ -575,7 +633,7 @@ namespace IpcPipes
 			bool ok = false;
 			str = string.Empty;
 			
-			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
+			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione id
 
 			if(pc.ID != ID_ERROR)									// Se hl'ha trovata...
 			{
@@ -596,7 +654,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Deserialize la stringa str come oggetto T, se il comando idCommand appartiene alla connessione idConnection
+		/// Deserialize la stringa str come oggetto T, se il comando idCommand appartiene alla connessione id
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="str"></param>
@@ -608,7 +666,7 @@ namespace IpcPipes
 			bool ok = false;
 			dato = new T();
 
-			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
+			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione id
 
 			if(pc.ID != ID_ERROR)									// Se trovata
 			{
@@ -627,7 +685,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Invia alla connessione idConnection il comando idCommand con hl'oggetto T obj
+		/// Invia alla connessione id il comando idCommand con hl'oggetto T obj
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="obj">Oggetto di tipo T</param>
@@ -643,33 +701,38 @@ namespace IpcPipes
 				PipeConnection pc = _pipes.GetByID(idConnection);
 				if(pc.ID != ID_ERROR)
 				{
-					StringBuilder sb = new StringBuilder();
-					sb.AppendLine(START_PK);
-					sb.Append(str);
-					sb.AppendLine(END_PK);
-					try
+					if(pc.IsSync)
 					{
-						pc.Sw.AutoFlush = true;
-						pc.Sw.WriteLine(sb.ToString());
-						ok = true;
+						StringBuilder sb = new StringBuilder();
+						sb.AppendLine(START_PK);
+						sb.Append(str);
+						sb.AppendLine(END_PK);
+						try
+						{
+							pc.Sw.AutoFlush = true;
+							pc.Sw.WriteLine(sb.ToString());
+							ok = true;
+						}
+						catch(Exception ex)
+						{
+							AddErrMessage(ex.Message);
+						}
 					}
-					catch(Exception ex)
+					else
 					{
-						AddErrMessage(ex.Message);
+						AddErrMessage($"Connessione {pc.ID} non sincronizzata");
 					}
-
 				}
 			}
 			return ok;
 		}
 
-
+		
 #warning Il Thread pipeReaderThread va arrestato, alla fine (Se5 non lo fa).
 
 #warning Aggiungere SendCloseConnection(int idConnection) per chiudere la connessione e rimuoverla dalla lista _pipes
 
 #warning Aggiungere SendPing(int idConnection) per inviare un ping e ricevere un pong (per verificare che la connessione sia attiva)
-#warning Aggiungere SendPong(int idConnection) per inviare un pong in risposta ad un ping ricevuto
 
 
 #warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
@@ -677,10 +740,15 @@ namespace IpcPipes
 
 
 		/// <summary>
-		/// Hanlder vuoto per inizializzare static DelegateString signalTxtMessage 
+		/// Handler vuoto per inizializzare static DelegateString signalTxtMessage 
 		/// </summary>
 		/// <param name="str"></param>
 		public static void EmptyDelegateString(string str) {}
+		/// <summary>
+		/// Handler vuoto per inizializzare static DelegateInt signalPong 
+		/// </summary>
+		/// <param name="i"></param>
+		public static void EmptyDelegateInt(int i) {}
 	}
 }
 

@@ -263,6 +263,48 @@ namespace IpcPipes
 			}
 		}
 
+		#warning CONTROLLARE E COMPLETARE...DUE CASI DIVERSI, PING->idConn / PONG->idConn->ID_other
+		public bool Ping(PingPong pp)
+		{
+			bool ok = false;
+			PipeConnection pc = _pipes.GetByID(id);
+			if(pc.ID != ID_ERROR)
+			{
+				if(pc.IsSync)
+				{
+					StringBuilder sb = new StringBuilder();
+
+					switch(pp)
+					{
+						case PingPong.Ping:
+							sb.AppendLine(PING_PK);
+						break;
+						case PingPong.Pong:
+							sb.AppendLine(PONG_PK);
+						break;
+					}
+					try
+					{
+						pc.Sw.AutoFlush = true;
+						pc.Sw.WriteLine(sb.ToString());
+						ok = true;
+					}
+					catch(Exception ex)
+					{
+						AddErrMessage(ex.Message);
+					}
+				}
+				else
+				{
+					AddErrMessage($"Connessione {id} non sincronizzata");
+				}
+			}
+			else
+			{
+				AddErrMessage($"Connessione {id} non trovata");
+			}
+			return ok;
+		}
 	}
 	#pragma warning restore CS8618 
 }

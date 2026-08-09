@@ -63,7 +63,7 @@ namespace IpcPipes
 								if(llenght > 1)
 								{
 
-								#warning AGGIUNGERE PING E PONG (CON UN CARATTERE IN PIU': id connessione
+								#warning AGGIUNGERE PING E PONG (con un carattere in piu' con id connessione... superfluo, usa ID e ID_other)
 									switch(header)
 									{
 										case START_PK:					// Intestazione (non aggiunta al buffer)
@@ -87,6 +87,21 @@ namespace IpcPipes
 										}
 										break;
 										
+										case PING_PK:
+										{
+											int id_answ = ppCon.ID_other;
+											
+											ppCon.Ping(1,IpcPipe.PingPong.Ping);
+											#warning DA SCRIVERE: LEGGE IL PING E RIPONDE CON UN PONG
+										}
+										break;
+
+										case PONG_PK:
+										{
+											#warning DA SCRIVERE: CHIAMA L'HANDLER DEL PONG
+										}
+										break;
+
 										default:
 										{
 											if(inPk)
@@ -170,8 +185,11 @@ namespace IpcPipes
 		/// </summary>
 		public void StartCycle()
 		{
-			CycleEnabled = true;
-			pipeReaderThread.Start();
+			if(!CycleEnabled)
+			{
+				CycleEnabled = true;
+				pipeReaderThread.Start();
+			}
 		}
 
 		#warning Aggiungere StopCycle(bool safe = true) per arrestare il ciclo di lettura (e il thread) in modo sicuro
@@ -216,6 +234,11 @@ namespace IpcPipes
 		public void RegisterTextMsgHandler(DelegateString handler)
 		{
 			signalTxtMessage = handler;
+		}
+
+		public void RegisterPongHandler(DelegateInt handler)
+		{
+			signalPong = handler;
 		}
 
 	}

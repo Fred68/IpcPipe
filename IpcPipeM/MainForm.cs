@@ -17,8 +17,8 @@ namespace IpcPipeM
 		IpcPipe ipc;
 
 		int idConn_to_slave = IpcPipe.ID_ERROR;         // Id della prima connessione
-		
-		int idComm_esegui = IpcPipe.ID_ERROR;			// Id dei comandi
+
+		int idComm_esegui = IpcPipe.ID_ERROR;           // Id dei comandi
 		int idComm_ricevi = IpcPipe.ID_ERROR;
 
 		public MainForm(NcFormStyle style,NcFormColor color,NcFormMsg msgs,CFG cfg) : base(style,color,msgs)
@@ -41,15 +41,16 @@ namespace IpcPipeM
 			nfo = new IpcPipe.Info(cfg.PIPE_out[0],                 // write pipe
 									cfg.PIPE_in[0],                 // read pipe
 									cfg.PIPE_master,                // is master
-									cfg.PIPE_delay,					// delay in ms
+									cfg.PIPE_delay,                 // delay in ms
 									IpcPipe.InstanceCheck.Unique    // instance check
 									);
 
 			try
 			{
 				ipc = new IpcPipe(new IpcPipe.CycleDelegates(SegnalaStatCiclo,SegnalaFineCiclo));
-				
+
 				ipc.RegisterTextMsgHandler(SegnalaMessaggioDiTesto);
+				ipc.RegisterPongHandler(SegnalaPong);
 
 				if(!ipc.CheckProcInstances(nfo.instanceCheck))
 				{
@@ -95,7 +96,10 @@ namespace IpcPipeM
 			this.BeginInvoke(new Action(() => NcMessageBox.Show(this,msg)));
 		}
 
-
+		public void SegnalaPong(int id)
+		{
+			this.BeginInvoke(new Action(() => NcMessageBox.Show(this,$"Pong da connessione {id}")));
+		}
 
 		/// <summary>
 		/// Crea la connessione
@@ -176,11 +180,14 @@ namespace IpcPipeM
 			ipc.StartCycle();
 		}
 
-		
-		
-		#region Handler dei comandi
 
-		public bool Vuoto(MyClass myClass) {return true;}
+
+		#region HANDLER dei comandi
+
+		public bool Vuoto(MyClass myClass)
+		{
+			return true;
+		}
 
 		public bool Esegui(MyClass myClass)
 		{
@@ -197,6 +204,21 @@ namespace IpcPipeM
 		}
 
 		#endregion
+
+		private void listaErroriToolStripMenuItem_Click(object sender,EventArgs e)
+		{
+			NcMessageBox.Show(this,ipc.GetErrMessageString(),"ERROR");
+		}
+
+		private void cancellaErroriToolStripMenuItem_Click(object sender,EventArgs e)
+		{
+			ipc.ClearErrMessages();
+		}
+
+		private void btPing_Click(object sender,EventArgs e)
+		{
+			ipc.Ping(1,IpcPipe.PingPong.Ping);
+		}
 	}
 
 }
