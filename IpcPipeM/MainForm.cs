@@ -47,7 +47,7 @@ namespace IpcPipeM
 
 			try
 			{
-				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
+				ipc = new IpcPipe(new IpcPipe.CycleDelegates(SegnalaStatCiclo,SegnalaFineCiclo));
 				
 				ipc.RegisterTextMsgHandler(SegnalaMessaggioDiTesto);
 

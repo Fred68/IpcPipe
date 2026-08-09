@@ -33,14 +33,16 @@ namespace IpcPipes
 		/// </summary>
 		public static void ReadStream()
 		{
-			#warning Il Thread pipeReaderThread va arrestato, alla fine (Se5 non lo fa).
+
 
 			List<string> lBuff = new List<string>();					// Buffer di lettura
 			bool inPk = false;											// In lettura pacchetto (dopo START_PK)
 
 			do
 			{
-				string linea;
+				string linea, header;
+				int llenght;
+
 				foreach(PipeConnection ppCon in Pipes())				// Ripete per tutte le PipeConnection
 				{
 					if((ppCon.IsSync) && (ppCon.Sr != null))			// Se la PipeConnection è sincronizzata (con StreamReader non nullo)...
@@ -50,12 +52,19 @@ namespace IpcPipes
 							#pragma warning disable CS8600
 							linea = ppCon.Sr.ReadLine();				
 							#pragma warning restore CS8600
+
 							if(linea != null)
 							{
+								
 								linea = linea.Trim();
-								if(linea.Length > 1)
+								llenght = linea.Length;
+								header = (llenght < HEADER_LENGHT) ? "" : linea.Substring(0, HEADER_LENGHT);
+
+								if(llenght > 1)
 								{
-									switch(linea)
+
+								#warning AGGIUNGERE PING E PONG (CON UN CARATTERE IN PIU': id connessione
+									switch(header)
 									{
 										case START_PK:					// Intestazione (non aggiunta al buffer)
 										{
@@ -173,13 +182,13 @@ namespace IpcPipes
 		/// <param name="segnala_ciclo"></param>
 		/// <param name="segnala_fine_ciclo"></param>
 		/// <returns></returns>
-		public bool CreateCycle(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
+		public bool CreateCycle(CycleDelegates delegs)
 		{
 			bool ok = true;
 
-			if(segnala_ciclo != null)
+			if(delegs.segnala_ciclo != null)
 			{
-				signalCycleEnabled = segnala_ciclo;
+				signalCycleEnabled = delegs.segnala_ciclo;
 			}
 			else
 			{
@@ -187,9 +196,9 @@ namespace IpcPipes
 				ok = false;
 			}
 
-			if(segnala_fine_ciclo != null)
+			if(delegs.segnala_fine_ciclo != null)
 			{
-				signalEndCycle = segnala_fine_ciclo;
+				signalEndCycle = delegs.segnala_fine_ciclo;
 			}
 			else
 			{

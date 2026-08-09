@@ -33,7 +33,7 @@ namespace IpcPipeS
 			nfo = new IpcPipe.Info(cfg.PIPE_out[0],cfg.PIPE_in[0],cfg.PIPE_master,cfg.PIPE_delay,IpcPipe.InstanceCheck.KillOther);
 			try
 			{
-				ipc = new IpcPipe(SegnalaStatCiclo,SegnalaFineCiclo);
+				ipc = new IpcPipe(new IpcPipe.CycleDelegates(SegnalaStatCiclo,SegnalaFineCiclo));
 
 				ipc.RegisterTextMsgHandler(SegnalaMessaggioDiTesto);
 
@@ -131,6 +131,9 @@ namespace IpcPipeS
 		{
 			bool ok = true;
 			MessageBox.Show("SecondForm::Ricevi:\n"+myClass.ToString());
+			
+			myClass.X = myClass.X + 1;
+			myClass.Str = myClass.Str + "->RICEVUTA";
 
 			if(!ipc.SendCommand<MyClass>(myClass,idComm_rispondi,idConn_to_master))
 			{

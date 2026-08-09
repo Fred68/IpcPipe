@@ -44,10 +44,38 @@ namespace IpcPipes
 		/********************************************/
 		// Costanti (con carattere ASCII ACK = 006)
 		/********************************************/
-		const string START_PK =	"\x0006*S*";								// Inizio pacchetto
-		const string END_PK =	"\u0006*E*";								// Fine pachetto
-		const string END_TR =	"\u0006*X*";								// Fine trasmissione
+		const string PKH = "\x6";
+		const string START_PK =	PKH + "*STR*";							// Inizio pacchetto
+		const string END_PK =	PKH + "*END*";							// Fine pachetto
+		const string END_TR =	PKH + "*XTR*";							// Fine trasmissione
+		const string PING_PK =	PKH + "*PIN*";							// Ping
+		const string PONG_PK =	PKH + "*PON*";							// Pong (risposta al ping)
 
+		static readonly int HEADER_LENGHT;
+
+		
+		static int _GetHeaderLenght()
+		{
+			int hl = -1;
+			bool hl_set = false;
+			string[] tmp = {START_PK, END_PK, END_TR, PING_PK, PONG_PK };		// SCRIVERE TUTTE LE COSTANTI !!!
+			foreach(string s in tmp)
+			{
+				int l = s.Length;
+				if( (!hl_set) && (l > 1) )
+				{
+					hl = l;
+					hl_set = true;
+				}
+				else if(hl != l)
+				{
+					hl = -1;
+					break;
+				}
+				
+			}
+			return hl;
+		}
 		/********************************************/
 		// Variabili statiche
 		/********************************************/
@@ -57,7 +85,7 @@ namespace IpcPipes
 		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
 
 		static DelegateBool signalCycleEnabled;								// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
-		static DelegateNull signalEndCycle;									// Chiamata dopo l'arresto del ciclo di lettura
+		static DelegateNull signalEndCycle;									// Chiamata dopo hl'arresto del ciclo di lettura
 		static DelegateString signalTxtMessage;                             // Chiamata per segnalare un messaggio di testo
 
 		/********************************************/
@@ -80,7 +108,7 @@ namespace IpcPipes
 		{
 			Unique,							// Ammessa una sola istanza
 			Multiple,						// Ammesse più istanze
-			KillOther,						// Ammessa sola l'ultima istanza, le altre vengono eliminate
+			KillOther,						// Ammessa sola hl'ultima istanza, le altre vengono eliminate
 		}
 
 		/// <summary>
@@ -122,6 +150,20 @@ namespace IpcPipes
 			}
 		}
 
+		/// <summary>
+		/// Delegates per costruttore e ciclo
+		/// </summary>
+		public struct CycleDelegates
+		{
+			public DelegateBool segnala_ciclo;
+			public DelegateNull segnala_fine_ciclo;
+
+			public CycleDelegates(DelegateBool segnala_ciclo, DelegateNull segnala_fine_ciclo)
+			{
+				this.segnala_ciclo = segnala_ciclo;
+				this.segnala_fine_ciclo = segnala_fine_ciclo;
+			}
+		}
 
 		/********************************************/
 		// Proprietà
@@ -150,18 +192,31 @@ namespace IpcPipes
 		/********************************************/
 		// CTOR
 		/********************************************/
+
+
+		static IpcPipe()
+		{
+			HEADER_LENGHT = _GetHeaderLenght();
+			if(HEADER_LENGHT == -1)
+				throw new Exception("COSTANTI DI LUNGHEZZA DIFFERENTE");
+			return;
+		}
 		/// <summary>
 		/// CTOR
 		/// </summary>
 		/// <exception cref="Exception"></exception>
-		public IpcPipe(DelegateBool signal_cycle, DelegateNull signal_end_cycle)
+		
+		#warning Racchiudere i delegate essenziali (signal_cycle, signal_end_cycle, signal_pong...) in una struct
+		
+		//public IpcPipe(DelegateBool signal_cycle, DelegateNull signal_end_cycle)
+		public IpcPipe(CycleDelegates delegs)
 		{
 			ClearErrMessages();
 			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
 			signalTxtMessage = EmptyDelegateString;							// Inizializza il delegate signalTxtMessage con una funzione vuota
-			if(!CreateCycle(signal_cycle, signal_end_cycle))				// I delegate non possono essere nulli
+			if(!CreateCycle(delegs))				// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
 		}
 
@@ -207,7 +262,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Ottiene l'ID (int) da un messaggio di sincronizzazione, se il messaggio è valido. Altrimenti restituisce ID_ERROR
+		/// Ottiene hl'ID (int) da un messaggio di sincronizzazione, se il messaggio è valido. Altrimenti restituisce ID_ERROR
 		/// Il messaggio deve essere costituito da STR_SYNC + CHR_SEPID
 		/// </summary>
 		/// <param name="msg"></param>
@@ -231,7 +286,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Crea un messaggio di sincronizzazione con l'ID specificato, nel formato STR_SYNC + CHR_SEP + ID
+		/// Crea un messaggio di sincronizzazione con hl'ID specificato, nel formato STR_SYNC + CHR_SEP + ID
 		/// </summary>
 		/// <param name="id"></param>
 		/// </summary>
@@ -401,8 +456,8 @@ namespace IpcPipes
 						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
-							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (dello slave) dal messaggio
-							if(id_other != ID_ERROR)                    // Se l'id è valido, lo memorizza
+							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae hl'id (dello slave) dal messaggio
+							if(id_other != ID_ERROR)                    // Se hl'id è valido, lo memorizza
 							{
 								pc.ID_other = id_other;
 								ok = true;
@@ -433,8 +488,8 @@ namespace IpcPipes
 						#pragma warning restore CS8600 
 						if(msg != null)									// Se non è nullo...
 						{
-							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae l'id (del master) dal messaggio
-							if(id_other != ID_ERROR)                    // Se l'id è valido, lo memorizza
+							id_other = IpcPipe.IdFromSyncMsg(msg);		// ...estrae hl'id (del master) dal messaggio
+							if(id_other != ID_ERROR)                    // Se hl'id è valido, lo memorizza
 							{
 								pc.ID_other = id_other;
 								pc.Sw.WriteLine(IpcPipe.SyncMsgFromId(pc.ID));	// Manda al masteril messaggio di sincronizzazione con il proprio ID.
@@ -507,7 +562,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		///  Serialize l'oggetto T come comando idCommand appartenente alla connessione iDConnection 
+		///  Serialize hl'oggetto T come comando idCommand appartenente alla connessione iDConnection 
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="obj"></param>
@@ -522,7 +577,7 @@ namespace IpcPipes
 			
 			PipeConnection pc = _pipes.GetByID(idConnection);		// Cerca la connessione idConnection
 
-			if(pc.ID != ID_ERROR)									// Se l'ha trovata...
+			if(pc.ID != ID_ERROR)									// Se hl'ha trovata...
 			{
 				Type tp = pc.GetDataType(idCommand);				// ...cerca il comando idCommnand ed il tipo di dato
 
@@ -572,7 +627,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Invia alla connessione idConnection il comando idCommand con l'oggetto T obj
+		/// Invia alla connessione idConnection il comando idCommand con hl'oggetto T obj
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="obj">Oggetto di tipo T</param>
@@ -608,12 +663,13 @@ namespace IpcPipes
 			return ok;
 		}
 
+
+#warning Il Thread pipeReaderThread va arrestato, alla fine (Se5 non lo fa).
+
 #warning Aggiungere SendCloseConnection(int idConnection) per chiudere la connessione e rimuoverla dalla lista _pipes
+
 #warning Aggiungere SendPing(int idConnection) per inviare un ping e ricevere un pong (per verificare che la connessione sia attiva)
 #warning Aggiungere SendPong(int idConnection) per inviare un pong in risposta ad un ping ricevuto
-
-
-
 
 
 #warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
