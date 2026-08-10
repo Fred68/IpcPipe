@@ -89,16 +89,16 @@ namespace IpcPipes
 										
 										case PING_PK:
 										{
-											int id_answ = ppCon.ID_other;
-											
-											ppCon.Ping(1,IpcPipe.PingPong.Ping);
-											#warning DA SCRIVERE: LEGGE IL PING E RIPONDE CON UN PONG
+											ppCon.Sw.WriteLine(PONG_PK);
 										}
 										break;
 
 										case PONG_PK:
 										{
-											#warning DA SCRIVERE: CHIAMA L'HANDLER DEL PONG
+											if(signalPong != null)
+											{
+												signalPong(ppCon.ID);
+											}
 										}
 										break;
 

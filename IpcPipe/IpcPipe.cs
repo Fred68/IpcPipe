@@ -50,14 +50,14 @@ namespace IpcPipes
 		/********************************************/
 		// Costanti (con carattere ASCII ACK = 006)
 		/********************************************/
-		const string PKH = "\x6";
-		const string START_PK =	PKH + "*STR*";							// Inizio pacchetto
-		const string END_PK =	PKH + "*END*";							// Fine pachetto
-		const string END_TR =	PKH + "*XTR*";							// Fine trasmissione
-		const string PING_PK =	PKH + "*PIN*";							// Ping
-		const string PONG_PK =	PKH + "*PON*";							// Pong (risposta al ping)
+		public const string PKH = "\x6";
+		public const string START_PK =	PKH + "*STR*";							// Inizio pacchetto
+		public const string END_PK =	PKH + "*END*";							// Fine pachetto
+		public const string END_TR =	PKH + "*XTR*";							// Fine trasmissione
+		public const string PING_PK =	PKH + "*PIN*";							// Ping
+		public const string PONG_PK =	PKH + "*PON*";							// Pong (risposta al ping)
 
-		static readonly int HEADER_LENGHT;
+		public static readonly int HEADER_LENGHT;
 
 		
 		static int _GetHeaderLenght()
@@ -537,53 +537,6 @@ namespace IpcPipes
 		}
 		
 		/// <summary>
-		/// Ping connection id
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public bool Ping(int id, PingPong pp)
-		{
-			bool ok = false;
-			PipeConnection pc = _pipes.GetByID(id);
-			if(pc.ID != ID_ERROR)
-			{
-				if(pc.IsSync)
-				{
-					StringBuilder sb = new StringBuilder();
-
-					switch(pp)
-					{
-						case PingPong.Ping:
-							sb.AppendLine(PING_PK);
-						break;
-						case PingPong.Pong:
-							sb.AppendLine(PONG_PK);
-						break;
-					}
-					try
-					{
-						pc.Sw.AutoFlush = true;
-						pc.Sw.WriteLine(sb.ToString());
-						ok = true;
-					}
-					catch(Exception ex)
-					{
-						AddErrMessage(ex.Message);
-					}
-				}
-				else
-				{
-					AddErrMessage($"Connessione {id} non sincronizzata");
-				}
-			}
-			else
-			{
-				AddErrMessage($"Connessione {id} non trovata");
-			}
-			return ok;
-		}
-
-		/// <summary>
 		/// ToString() override
 		/// </summary>
 		/// <returns></returns>
@@ -727,16 +680,35 @@ namespace IpcPipes
 			return ok;
 		}
 
-		
+		public bool Ping(int idConnection)
+		{
+			bool ok = false;
+			PipeConnection pc = _pipes.GetByID(idConnection);
+			if(pc.ID != ID_ERROR)
+			{
+				if(pc.IsSync)
+				{
+					try
+					{
+						pc.Sw.AutoFlush = true;
+						pc.Sw.WriteLine(PING_PK);
+						ok = true;
+					}
+					catch(Exception ex)
+					{
+						AddErrMessage(ex.Message);
+					}	
+				}
+			}
+			return ok;
+		}
+
 #warning Il Thread pipeReaderThread va arrestato, alla fine (Se5 non lo fa).
 
 #warning Aggiungere SendCloseConnection(int idConnection) per chiudere la connessione e rimuoverla dalla lista _pipes
 
-#warning Aggiungere SendPing(int idConnection) per inviare un ping e ricevere un pong (per verificare che la connessione sia attiva)
-
-
 #warning VALUTARE COME GESTIRE I DATI... PROBABILMENTE ListaProprietà è abbastanza generico
-#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI, PING/PONG), MEGLIO SE INCLUSI NELLA ListaProprietà
+#warning VALUTARE SE E COME GESTIRE GLI STATI (COMANDI MULTIPLI), MEGLIO SE INCLUSI NELLA ListaProprietà
 
 
 		/// <summary>

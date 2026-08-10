@@ -217,7 +217,7 @@ namespace IpcPipeM
 
 		private void btPing_Click(object sender,EventArgs e)
 		{
-			ipc.Ping(1,IpcPipe.PingPong.Ping);
+			ipc.Ping(1);
 		}
 	}
 
