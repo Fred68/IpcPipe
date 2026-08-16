@@ -62,8 +62,6 @@ namespace IpcPipes
 
 								if(llenght > 1)
 								{
-
-								#warning AGGIUNGERE PING E PONG (con un carattere in piu' con id connessione... superfluo, usa ID e ID_other)
 									switch(header)
 									{
 										case START_PK:					// Intestazione (non aggiunta al buffer)

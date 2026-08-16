@@ -1,15 +1,15 @@
 ﻿
+#define _IPC_SIGLETON
+#undef _IPC_SIGLETON
+
 using List_ID;
-//using Microsoft.VisualBasic;
 using System;
-//using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;				// Pipe		
 using System.Linq;
 using System.Net.NetworkInformation;
-//using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,6 +82,7 @@ namespace IpcPipes
 			}
 			return hl;
 		}
+
 		/********************************************/
 		// Variabili statiche
 		/********************************************/
@@ -101,7 +102,14 @@ namespace IpcPipes
 		// Variabili
 		/********************************************/
 		Thread pipeReaderThread;											// Thread di lettura
-		static bool _cycleEnabled;											// Attivato thread di lettura delle pipe
+		static bool _cycleEnabled;                                          // Attivato thread di lettura delle pipe
+
+		// Non serve rendere la classe singleton, c'é già un controllo di istanze nel CTOR
+		#if _IPC_SIGLETON
+		#pragma warning disable CS8625
+				static IpcPipe _instance = null;									// Istanza della classe (singleton)
+		#pragma warning restore CS8625
+		#endif
 
 		/********************************************/
 		// Messaggi di sincronizzazione
@@ -198,13 +206,19 @@ namespace IpcPipes
 				}
 			}
 		}
+		
+		
+		
 		#endregion
 
 		/********************************************/
 		// CTOR
 		/********************************************/
 
-
+		/// <summary>
+		/// Static CTOR (verifica le costanti)
+		/// </summary>
+		/// <exception cref="Exception"></exception>
 		static IpcPipe()
 		{
 			HEADER_LENGHT = _GetHeaderLenght();
@@ -212,25 +226,41 @@ namespace IpcPipes
 				throw new Exception("COSTANTI DI LUNGHEZZA DIFFERENTE");
 			return;
 		}
+
+
 		/// <summary>
 		/// CTOR
 		/// </summary>
-		/// <exception cref="Exception"></exception>
-		
+		/// <exception cref="Exception"></exception>		
+		#if _IPC_SIGLETON
+		protected IpcPipe(CycleDelegates delegs)
+		#else
 		public IpcPipe(CycleDelegates delegs)
+		#endif
 		{
 			ClearErrMessages();
-			if(!CheckUniquenClassIstance())									// Ammessa una sola istanza della classe IpcPipe
+			if(!CheckUniquenClassIstance())								// Ammessa una sola istanza della classe IpcPipe
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
 			
-			signalTxtMessage = EmptyDelegateString;							// Inizializza i delegate opzionali con una funzione vuota
+			signalTxtMessage = EmptyDelegateString;						// Inizializza i delegate opzionali con una funzione vuota
 			signalPong = EmptyDelegateInt;
 
-			if(!CreateCycle(delegs))				// I delegate non possono essere nulli
+			if(!CreateCycle(delegs))									// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
 		}
 
+
+		#if _IPC_SIGLETON
+		public IpcPipe GetInstance(CycleDelegates delegs)
+		{
+			if(_instance == null)
+			{
+				_instance = new IpcPipe(delegs);
+			}
+			return _instance;
+		}
+		#endif
 
 		/********************************************/
 		// Funzion membro private o protette
