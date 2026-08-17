@@ -86,28 +86,28 @@ namespace IpcPipes
 		/********************************************/
 		// Variabili statiche
 		/********************************************/
-		private static int _istanze = 0;									// Numero di istanze
-		private static readonly object _lockObj = new object();				// Oggetto per lock: controllo istanze
+		private static int _istanze = 0;								// Numero di istanze
+		private static readonly object _lockObj = new object();			// Oggetto per lock: controllo istanze
 
-		private static List_ID<PipeConnection> _pipes;						// Lista delle connessioni (thread safe)
+		private static List_ID<PipeConnection> _pipes;					// Lista delle connessioni (thread safe)
 
-		// Handler obblicatori
-		static DelegateBool signalCycleEnabled;								// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
-		static DelegateNull signalEndCycle;									// Chiamata dopo hl'arresto del ciclo di lettura
+		// Handler obbligatori
+		static DelegateBool signalCycleEnabled;							// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+		static DelegateNull signalEndCycle;								// Chiamata dopo hl'arresto del ciclo di lettura
 		// Handler opzionali
-		static DelegateString signalTxtMessage;                             // Chiamata per segnalare un messaggio di testo
-		static DelegateInt signalPong;										// Chiamata per segnalare la risposta ad un ping
+		static DelegateString signalTxtMessage;                         // Chiamata per segnalare un messaggio di testo
+		static DelegateInt signalPong;									// Chiamata per segnalare la risposta ad un ping
 
 		/********************************************/
 		// Variabili
 		/********************************************/
-		Thread pipeReaderThread;											// Thread di lettura
-		static bool _cycleEnabled;                                          // Attivato thread di lettura delle pipe
+		Thread pipeReaderThread;										// Thread di lettura
+		static bool _cycleEnabled;                                      // Attivato thread di lettura delle pipe
 
-		// Non serve rendere la classe singleton, c'é già un controllo di istanze nel CTOR
-		#if _IPC_SIGLETON
+		
+		#if _IPC_SIGLETON												// Singleton superfluo (controlla istanze nel CTOR)
 		#pragma warning disable CS8625
-				static IpcPipe _instance = null;									// Istanza della classe (singleton)
+				static IpcPipe _instance = null;
 		#pragma warning restore CS8625
 		#endif
 
@@ -410,9 +410,13 @@ namespace IpcPipes
 			PipeConnection pp;
 			try
 			{
-				pp = new PipeConnection(nfo.writePipe,nfo.readPipe,nfo.isMaster);
-				pp.PsW = new NamedPipeServerStream(pp.WritePipeName,PipeDirection.Out);
-				pp.PsR = new NamedPipeClientStream(".",pp.ReadPipeName,PipeDirection.In);
+				pp = new PipeConnection(nfo.writePipe,nfo.readPipe,nfo.isMaster,this);
+
+				//pp.PsW = new NamedPipeServerStream(pp.WritePipeName,PipeDirection.Out);
+				//pp.PsR = new NamedPipeClientStream(".",pp.ReadPipeName,PipeDirection.In);
+
+				
+
 				id = _pipes.Add(pp);
 			}
 			catch (Exception ex)
@@ -424,7 +428,7 @@ namespace IpcPipes
 		}
 
 		/// <summary>
-		/// Connette le pipe con numero 'id' alla controparte (master o slave) e crea gli stream reader/writer
+		/// Connette le pipe con numero 'id' alla controparte (master o slave), crea gli stream reader/writer e la attiva
 		/// Le funzioni non prevedono un timeout (a meno di usar la versione asincrona)
 		/// /// </summary>
 		/// <param name="id">id della connessione</param>
@@ -435,36 +439,8 @@ namespace IpcPipes
 			PipeConnection pc = _pipes.GetByID(id);
 			if(pc.ID != ID_ERROR)
 			{
-				try
-				{
-					if(pc.IsMaster)
-					{
-						pc.PsW.WaitForConnection();
-						pc.PsR.Connect();
-					}
-					else
-					{
-						pc.PsR.Connect();
-						pc.PsW.WaitForConnection();
-					}
-					pc.Sr = new StreamReader(pc.PsR);
-					pc.Sw = new StreamWriter(pc.PsW);
-					pc.Sw.AutoFlush = true;
-
-					if(pc.Sr == null)
-					{
-						AddErrMessage($"Errore nella creazione dello StreamReader per la pipe {pc.ReadPipeName}");
-					}
-					if(pc.Sw == null)
-					{
-						AddErrMessage($"Errore nella creazione dello StreamWriter per la pipe {pc.WritePipeName}");
-					}
-					ok = true;
-				}
-				catch(Exception ex)
-				{
-					AddErrMessage(ex.Message);
-				}
+				ok = pc.Connect();
+				pc.IsActive = true;
 			}
 			else
 			{
@@ -491,7 +467,8 @@ namespace IpcPipes
 				{														// Se è master:
 					try
 					{
-						pc.Sw.WriteLine(IpcPipe.SyncMsgFromId(pc.ID));	// Manda allo slave il messaggio di sincronizzazione con il proprio ID.
+						pc.Sw.WriteLine(IpcPipe.SyncMsgFromId(pc.ID));  // Manda allo slave il messaggio di sincronizzazione con il proprio ID.
+
 						#pragma warning disable CS8600
 						msg = pc.Sr.ReadLine();                         // Legge la risposta dallo slave.
 						#pragma warning restore CS8600 
@@ -611,7 +588,7 @@ namespace IpcPipes
 		/// <param name="idConnection"></param>
 		/// <param name="str">oggetto serializzato in stringa</param>
 		/// <returns></returns>
-		protected bool Serialize<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
+		bool Serialize<T>(T obj, int idCommand, int idConnection, out string str) where T : class, new()
 		{
 			bool ok = false;
 			str = string.Empty;
@@ -644,7 +621,7 @@ namespace IpcPipes
 		/// <param name="idConnection"></param>
 		/// <param name="dato"></param>
 		/// <returns></returns>
-		protected bool Deserialize<T>(string str, int idConnection, out T dato) where T : class, new()
+		bool Deserialize<T>(string str, int idConnection, out T dato) where T : class, new()
 		{
 			bool ok = false;
 			dato = new T();
@@ -690,16 +667,18 @@ namespace IpcPipes
 						sb.AppendLine(START_PK);
 						sb.Append(str);
 						sb.AppendLine(END_PK);
-						try
-						{
-							pc.Sw.AutoFlush = true;
-							pc.Sw.WriteLine(sb.ToString());
-							ok = true;
-						}
-						catch(Exception ex)
-						{
-							AddErrMessage(ex.Message);
-						}
+
+						ok = pc.WriteLine(sb.ToString());
+						//try
+						//{
+						//	pc.Sw.AutoFlush = true;
+						//	pc.Sw.WriteLine(sb.ToString());
+						//	ok = true;
+						//}
+						//catch(Exception ex)
+						//{
+						//	AddErrMessage(ex.Message);
+						//}
 					}
 					else
 					{
@@ -710,6 +689,12 @@ namespace IpcPipes
 			return ok;
 		}
 
+		/// <summary>
+		/// Invia un Ping alla connessione idConnection, se è sincronizzata.
+		/// Se la connessione non è sincronizzata, restituisce false.
+		/// </summary>
+		/// <param name="idConnection"></param>
+		/// <returns></returns>
 		public bool Ping(int idConnection)
 		{
 			bool ok = false;
@@ -746,6 +731,7 @@ namespace IpcPipes
 		/// </summary>
 		/// <param name="str"></param>
 		public static void EmptyDelegateString(string str) {}
+
 		/// <summary>
 		/// Handler vuoto per inizializzare static DelegateInt signalPong 
 		/// </summary>

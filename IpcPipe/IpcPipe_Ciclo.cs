@@ -27,13 +27,35 @@ namespace IpcPipes
 		*/
 		/********************************************/
 
+#warning GESTIRE L'ARRESTO DEL CICLO DI LETTURA IN MODO DIVERSO (Messaggio END_TR).
+		/*
+			.	Modificare il ciclo per analizzare una PipeConnection solo se è active.
+			.	Funzione per attivate/disattivare una PipeConnection (solo per il processo corrente).
+				
+
+			.	Funzione con messaggio (solo lato master) per disattivare una PipeConnection.
+			.	Handler del messaggio di disattivazione della PipeConnection (solo lato slave).
+
+
+			.	Funzione in IpcPipe per rimozione della pipe connection:
+					. Disattiva la pipe connection (_active = false) dai lati master 
+					. Desincronizza e disconnette la pipe connection (chiude le pipe)
+					. chiude gli stream e le pipe
+					. rimuove la PipeConnection dalla lista
+
+
+
+
+
+
+
+		*/
 
 		/// <summary>
 		/// Funzione con ciclo di lettura eseguita dal thread secondario
 		/// </summary>
 		public static void ReadStream()
 		{
-
 
 			List<string> lBuff = new List<string>();					// Buffer di lettura
 			bool inPk = false;											// In lettura pacchetto (dopo START_PK)
@@ -45,7 +67,9 @@ namespace IpcPipes
 
 				foreach(PipeConnection ppCon in Pipes())				// Ripete per tutte le PipeConnection
 				{
-					if((ppCon.IsSync) && (ppCon.Sr != null))			// Se la PipeConnection è sincronizzata (con StreamReader non nullo)...
+					if(	(ppCon.IsSync) &&								// Se la connessione è sincronizzata...
+						(ppCon.Sr != null) &&                           // ...con StreamReader non nullo...
+						(ppCon.IsActive))								// ... e attiva:
 					{													// ...legge una linea e la 'ripulisce'
 						try
 						{
@@ -79,9 +103,10 @@ namespace IpcPipes
 										break;
 										case END_TR:
 										{
+											#warning GESTIRE L'ARRESTO IN MODO DIVERSO. VD. INIZIO FILE.
 											lBuff.Clear();
 											inPk = false;
-											CycleEnabled = false;		// Modifica la proprietà (richiama altre funzioni)
+											CycleEnabled = false;		// proprietà: richiama altre funzioni
 										}
 										break;
 										

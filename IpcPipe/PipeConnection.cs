@@ -23,19 +23,22 @@ namespace IpcPipes
 
 	public class PipeConnection : I_ID
 	{
-		public static int ID_ERROR;								// ID di errore per la creazione della connessione
+		public static int ID_ERROR;				// ID di errore per la creazione della connessione
 
-		int _id;
-		bool isMaster;
-		string writePipeName,readPipeName;
-		NamedPipeServerStream psW;
-		NamedPipeClientStream psR;
-		StreamReader sr;
-		StreamWriter sw;
-		bool isSync;
-		int _id_other;
+		int _id;                                // ID della connessione (per questo processo)
+		int _id_other;                          // ID dell'altra connessione (per l'altro processo)
+		bool _isMaster;							// True se la connessione è master
+		string _writePipeName, _readPipeName;	// Nomi delle pipe di scrittura e lettura
+		NamedPipeServerStream _psW;				// Pipe di scrittura
+		NamedPipeClientStream _psR;				// Pipe di lettura
+		StreamReader _sr;                       // StreamReader			
+		StreamWriter _sw;						// StreamReader
+		bool _isSync;                           // La connessione è sincronizzata con la controparte
+		IpcPipe _ipcOwner;						// Oggetto IpcPipe di appartenenza
+		bool _isConnected;                      // La connessione è stata stabilita (pipe aperte)
+		bool _active;                           // La connessione (già sincronizzata) è attiva						
 
-		private List_ID<Cmd> _commands;					// Lista dei comandi (thread safe)
+		private List_ID<Cmd> _commands;			// Lista dei comandi (thread safe)
 
 
 		#region PROPRIETA'
@@ -44,8 +47,8 @@ namespace IpcPipes
 		/// </summary>
 		public int ID
 		{
-			get{return _id;}
-			set{_id = value;}
+			get {return _id;}
+			set {_id = value;}
 		}
 
 		/// <summary>
@@ -53,7 +56,27 @@ namespace IpcPipes
 		/// </summary>
 		public bool IsMaster
 		{
-			get{return isMaster;}
+			get{return _isMaster;}
+		}
+
+		/// <summary>
+		/// La connessione (già sincronizzata con la controparte) è attiva ?
+		/// </summary>
+		public bool IsActive
+		{
+			get
+			{
+				return _active;
+			}
+			set
+			{
+				_active = value;
+			}
+		}
+
+		bool isConnected
+		{
+			get {return _isConnected;}
 		}
 
 		/// <summary>
@@ -61,7 +84,7 @@ namespace IpcPipes
 		/// </summary>
 		public string WritePipeName
 		{
-			get{return writePipeName;}
+			get{return _writePipeName;}
 		}
 
 		/// <summary>
@@ -69,7 +92,7 @@ namespace IpcPipes
 		/// </summary>
 		public string ReadPipeName
 		{
-			get{return readPipeName;}
+			get{return _readPipeName;}
 		}
 
 		/// <summary>
@@ -77,8 +100,8 @@ namespace IpcPipes
 		/// </summary>
 		public bool IsSync
 		{
-			get{return isSync;}
-			set{isSync = value;}
+			get{return _isSync;}
+			set{_isSync = value;}
 		}
 
 		/// <summary>
@@ -95,8 +118,8 @@ namespace IpcPipes
 		/// </summary>
 		public NamedPipeServerStream PsW
 		{
-			get {return psW;}
-			set {psW = value;}
+			get {return _psW;}
+			protected set {_psW = value;}
 		}
 
 		/// <summary>
@@ -104,8 +127,8 @@ namespace IpcPipes
 		/// </summary>
 		public NamedPipeClientStream PsR
 		{
-			get {return psR;}
-			set {psR = value;}
+			get {return _psR;}
+			protected set {_psR = value;}
 		}
 
 		/// <summary>
@@ -113,8 +136,8 @@ namespace IpcPipes
 		/// </summary>
 		public StreamReader Sr
 		{
-			get{return sr;}
-			set{sr = value;}
+			get{return _sr;}
+			set{_sr = value;}
 		}
 
 		/// <summary>
@@ -122,8 +145,8 @@ namespace IpcPipes
 		/// </summary>
 		public StreamWriter Sw
 		{
-			get{return sw;}
-			set{sw = value;}
+			get{return _sw;}
+			set{_sw = value;}
 		}
 		#endregion
 
@@ -132,22 +155,30 @@ namespace IpcPipes
 		/// </summary>
 		static PipeConnection()
 		{
-			//_commands = new List_ID<Cmd>();
 			ID_ERROR = List_ID<PipeConnection>.ID_ERROR;
 		}
-		/// <summary>
-		/// CTOR
-		/// </summary>
-		/// <param name="write_pipe_name"></param>
-		/// <param name="read_pipe_name"></param>
-		/// <param name="is_master"></param>
-		public PipeConnection(string write_pipe_name, string read_pipe_name, bool is_master)
+
+		
+		public PipeConnection(string write_pipe_name, string read_pipe_name, bool is_master, IpcPipe owner)
 		{
-			writePipeName = write_pipe_name;
-			readPipeName = read_pipe_name;
-			isMaster = is_master;
-			isSync = false;
-			_commands = new List_ID<Cmd>();
+			_writePipeName = write_pipe_name;
+			_readPipeName = read_pipe_name;
+			_isMaster = is_master;
+			_isSync = false;
+			_ipcOwner = owner;
+			_active = false;
+
+			try
+			{
+				_commands = new List_ID<Cmd>();
+				_psW = new NamedPipeServerStream(_writePipeName,PipeDirection.Out);
+				_psR = new NamedPipeClientStream(".",_readPipeName,PipeDirection.In);
+			}
+			catch(Exception ex)
+			{
+				_ipcOwner.AddErrMessage(ex.Message);
+				throw new Exception($"Errore nella creazione della connessione {_writePipeName} - {_readPipeName}: {ex.Message}");
+			}
 		}
 			
 		/// <summary>
@@ -156,7 +187,8 @@ namespace IpcPipes
 		public PipeConnection()
 		{
 			ID = ID_ERROR;
-			isSync = false;
+			_isSync = false;
+			_active = false;
 			_commands = new List_ID<Cmd>();
 		}
 		
@@ -168,11 +200,11 @@ namespace IpcPipes
 		{
 			StringBuilder strb = new StringBuilder();
 			strb.AppendLine($"Pipe ID: {_id}");
-			string mst = isMaster ? "Master" : "Slave";
+			string mst = _isMaster ? "Master" : "Slave";
 			strb.AppendLine($"IsMaster: {mst}");
 			strb.AppendLine($"WritePipe: {WritePipeName}");
 			strb.AppendLine($"ReadPipe: {ReadPipeName}");	
-			strb.AppendLine($"IsSync: {isSync}");
+			strb.AppendLine($"IsSync: {_isSync}");
 			strb.AppendLine($"ID_other: {_id_other}");
 			strb.AppendLine("_commands:");
 			foreach(Cmd cmd in _commands)
@@ -259,6 +291,71 @@ namespace IpcPipes
 			}
 		}
 
+		/// <summary>
+		/// Scrive una riga nella pipe di scrittura.
+		/// Gestisce gli errori e li aggiunge alla lista nella classe ipcPipe di appartenenza
+		/// </summary>
+		/// <param name="line"></param>
+		/// <returns>true se l'operazione è riuscita</returns>
+		public bool WriteLine(string line)
+		{
+			bool ret = false;
+			if(_sw != null)
+			{
+				try
+				{
+					_sw.WriteLine(line);		//_sw.Flush() superfluo: _sw.AutoFlush = true in Connect()
+					ret = true;
+				}
+				catch(Exception ex)
+				{
+					_ipcOwner.AddErrMessage(ex.Message);
+				}
+			}
+			return ret;
+		}
+	
+		public bool Connect()
+		{
+			if(_isConnected)
+			{
+				_ipcOwner.AddErrMessage($"Connessione {_writePipeName} - {_readPipeName} già stabilita","",ErrorMessages.ErrorMessages.ErrType.Messages);
+			}
+			else
+			{
+				try
+				{
+					if(_isMaster)
+					{
+						_psW.WaitForConnection();
+						_psR.Connect();
+					}
+					else
+					{
+						_psR.Connect();
+						_psW.WaitForConnection();
+					}
+					_sr = new StreamReader(_psR);
+					_sw = new StreamWriter(_psW);
+					_sw.AutoFlush = true;
+
+					if(_sr == null)
+					{
+						_ipcOwner.AddErrMessage($"Errore nella creazione dello StreamReader per la pipe {_readPipeName}");
+					}
+					if(_sw == null)
+					{
+						_ipcOwner.AddErrMessage($"Errore nella creazione dello StreamWriter per la pipe {_writePipeName}");
+					}
+					_isConnected = true;
+				}
+				catch(Exception ex)
+				{
+					_ipcOwner.AddErrMessage(ex.Message);
+				}
+			}
+			return _isConnected;
+		}
 	}
 	#pragma warning restore CS8618 
 }

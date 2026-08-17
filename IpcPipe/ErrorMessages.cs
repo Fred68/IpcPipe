@@ -192,8 +192,10 @@ namespace ErrorMessages
 		/// <returns></returns>
 		public string GetErrMessageString(ErrType typ = ErrType.NUM, bool errTitle = true, bool details = true)
 		{
-			StringBuilder sb = new StringBuilder();
-			List<ErrType> err2proc = new List<ErrType>();
+			StringBuilder _msg = new StringBuilder();
+			StringBuilder _sb = new StringBuilder();
+			
+			List<ErrType> err2proc = new List<ErrType>();		// Lista dei tipi di messaggio da considerare
 			if(typ == ErrType.NUM)
 			{
 				err2proc.Add(ErrType.Errors);
@@ -204,18 +206,27 @@ namespace ErrorMessages
 				err2proc.Add(typ);
 			}
 			
-			
+			bool hasMsg = false;
 			foreach(ErrType t in err2proc)
 			{
-				if(errTitle)
-					sb.AppendLine(t.ToString());
+				_sb.Clear();
+				int count = 0;
 				foreach (ErrorMsg msg in Messages(t))
 				{
-					sb.AppendLine(msg.ToString(details));
+					_sb.AppendLine(msg.ToString(details));
+					count++;
+				}
+				if(errTitle && count > 0)
+					_msg.AppendLine(t.ToString());
+				if(count > 0)
+				{
+					_msg.AppendLine(_sb.ToString());
+					hasMsg = true;
 				}
 			}
+			if(!hasMsg)	_msg.AppendLine("No error messages");
 
-			return sb.ToString();
+			return _msg.ToString();
 		}
 
 	}
