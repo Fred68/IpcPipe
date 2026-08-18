@@ -92,11 +92,11 @@ namespace IpcPipes
 		private static List_ID<PipeConnection> _pipes;					// Lista delle connessioni (thread safe)
 
 		// Handler obbligatori
-		static DelegateBool signalCycleEnabled;							// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
-		static DelegateNull signalEndCycle;								// Chiamata dopo hl'arresto del ciclo di lettura
+		static DelegateBool _signalCycleEnabled;						// Chiamata per segnalare esternamente la (dis)abilitazione del ciclo di lettura
+		static DelegateNull _signalEndCycle;							// Chiamata dopo hl'arresto del ciclo di lettura
 		// Handler opzionali
-		static DelegateString signalTxtMessage;                         // Chiamata per segnalare un messaggio di testo
-		static DelegateInt signalPong;									// Chiamata per segnalare la risposta ad un ping
+		static DelegateString _signalTxtMessage;                        // Chiamata per segnalare un messaggio di testo
+		static DelegateInt _signalPong;									// Chiamata per segnalare la risposta ad un ping
 
 		/********************************************/
 		// Variabili
@@ -188,6 +188,7 @@ namespace IpcPipes
 		// Proprietà
 		/********************************************/
 		#region PROPRIETA'
+
 		/// <summary>
 		/// Ciclo (thread di lettura) abilitato
 		/// </summary>
@@ -200,14 +201,17 @@ namespace IpcPipes
 			set
 			{
 				_cycleEnabled = value;
-				if (signalCycleEnabled != null)
+				if (_signalCycleEnabled != null)
 				{
-					signalCycleEnabled(_cycleEnabled);
+					_signalCycleEnabled(_cycleEnabled);
 				}
 			}
 		}
 		
-		
+		/// <summary>
+		/// Chiamata per segnalare un messaggio di testo
+		/// </summary>
+		public DelegateString signalTxtMessage		{get {return _signalTxtMessage;} }
 		
 		#endregion
 
@@ -243,8 +247,8 @@ namespace IpcPipes
 				throw new Exception(GetLastErrMessage());
 			_pipes = new List_ID<PipeConnection>();
 			
-			signalTxtMessage = EmptyDelegateString;						// Inizializza i delegate opzionali con una funzione vuota
-			signalPong = EmptyDelegateInt;
+			_signalTxtMessage = EmptyDelegateString;						// Inizializza i delegate opzionali con una funzione vuota
+			_signalPong = EmptyDelegateInt;
 
 			if(!CreateCycle(delegs))									// I delegate non possono essere nulli
 				throw new Exception(GetLastErrMessage());
@@ -439,8 +443,8 @@ namespace IpcPipes
 			PipeConnection pc = _pipes.GetByID(id);
 			if(pc.ID != ID_ERROR)
 			{
-				ok = pc.Connect();
-				pc.IsActive = true;
+				ok = pc.Connect();      // Connette le pipe (crea gli stream reader/writer)
+				pc.IsActive = ok;       // Se la connessione è riuscita, la attiva (altriment la disattiva)
 			}
 			else
 			{
@@ -727,16 +731,86 @@ namespace IpcPipes
 
 
 		/// <summary>
-		/// Handler vuoto per inizializzare static DelegateString signalTxtMessage 
+		/// Handler vuoto per inizializzare static DelegateString _signalTxtMessage 
 		/// </summary>
 		/// <param name="str"></param>
 		public static void EmptyDelegateString(string str) {}
 
 		/// <summary>
-		/// Handler vuoto per inizializzare static DelegateInt signalPong 
+		/// Handler vuoto per inizializzare static DelegateInt _signalPong 
 		/// </summary>
 		/// <param name="i"></param>
 		public static void EmptyDelegateInt(int i) {}
+	
+		/// <summary>
+		/// Abilita il ciclo di lettura e lo avvia
+		/// </summary>
+		public void StartCycle()
+		{
+			if(!CycleEnabled)
+			{
+				CycleEnabled = true;
+				pipeReaderThread.Start();
+			}
+		}
+
+		#warning Aggiungere StopCycle(bool safe = true) per arrestare il ciclo di lettura (e il thread) in modo sicuro
+
+		/// <summary>
+		/// Crea il ciclo di lettura
+		/// </summary>
+		/// <param name="segnala_ciclo"></param>
+		/// <param name="segnala_fine_ciclo"></param>
+		/// <returns></returns>
+		public bool CreateCycle(CycleDelegates delegs)
+		{
+			bool ok = true;
+
+			if(delegs.segnala_ciclo != null)
+			{
+				_signalCycleEnabled = delegs.segnala_ciclo;
+			}
+			else
+			{
+				AddErrMessage("Il delegate per segnalare avvio e arresto del ciclo non può essere null");
+				ok = false;
+			}
+
+			if(delegs.segnala_fine_ciclo != null)
+			{
+				_signalEndCycle = delegs.segnala_fine_ciclo;
+			}
+			else
+			{
+				AddErrMessage("Il delegate per segnalare la fine del ciclo non può essere null");
+				ok = false;
+			}
+
+			if(ok)
+			{
+				pipeReaderThread = new Thread(ReadStream);
+			}
+			return ok;
+		}
+
+		/// <summary>
+		/// Registra un handler per i messaggi di testo ricevuti
+		/// </summary>
+		/// <param name="handler"></param>
+		public void RegisterTextMsgHandler(DelegateString handler)
+		{
+			_signalTxtMessage = handler;
+		}
+
+		/// <summary>
+		/// Registra un handler per i messaggi di risposta al ping
+		/// </summary>
+		/// <param name="handler"></param>
+		public void RegisterPongHandler(DelegateInt handler)
+		{
+			_signalPong = handler;
+		}
+
 	}
 }
 

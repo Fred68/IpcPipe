@@ -314,26 +314,63 @@ namespace IpcPipes
 			}
 			return ret;
 		}
-	
+
+
+		static void OnConnection(IAsyncResult ar)
+		{
+			if(ar.AsyncState != null)
+			{
+				PipeConnection pc = (PipeConnection)ar.AsyncState;
+				int x = 1;
+				try
+				{
+					pc._psW.EndWaitForConnection(ar);
+					if(pc._ipcOwner.signalTxtMessage != null)	pc._ipcOwner.signalTxtMessage("Connessione stabilita");
+				}
+				catch(Exception ex)
+				{
+					if(pc._ipcOwner.signalTxtMessage != null)	pc._ipcOwner.signalTxtMessage("Connessione stabilita");
+				}
+			}
+		
+			//_ipcOwn _signalTxtMessage("TypeDat di dato ricevuto non corrispondente a quello atteso");
+			
+		}
+		
+
+		/// <summary>
+		/// Connette le pipe di scrittura e lettura.
+		/// </summary>
+		/// <returns></returns>
 		public bool Connect()
 		{
-			if(_isConnected)
+			
+
+
+
+			if(!_isConnected)
 			{
-				_ipcOwner.AddErrMessage($"Connessione {_writePipeName} - {_readPipeName} già stabilita","",ErrorMessages.ErrorMessages.ErrType.Messages);
-			}
-			else
-			{
+				#warning Dopo la connessione, impostare un flag
 				try
 				{
 					if(_isMaster)
 					{
-						_psW.WaitForConnection();
-						_psR.Connect();
+						//_psW.WaitForConnection();
+						_psW.BeginWaitForConnection(OnConnection, this);	// Attende
+						
+						#warning Aggiungere un ciclo con timeout
+
+						#warning Usare Connect(int timeout_ms) !!!
+						_psR.Connect();                 // ...poi si connette alla pipe di lettura.
 					}
 					else
 					{
-						_psR.Connect();
-						_psW.WaitForConnection();
+						#warning Usare Connect(int timeout_ms) !!!
+						_psR.Connect();                 // Si connette alla pipe di lettura...
+						_psW.WaitForConnection();       // ...poi attende connessione dal master.
+						#warning Usare lo stesso codice di _psW.BeginWaitForConnection(OnConnection, this) + ciclo di attesa
+
+
 					}
 					_sr = new StreamReader(_psR);
 					_sw = new StreamWriter(_psW);
@@ -354,9 +391,16 @@ namespace IpcPipes
 					_ipcOwner.AddErrMessage(ex.Message);
 				}
 			}
+			else
+			{
+				_ipcOwner.AddErrMessage($"Connessione {_writePipeName} - {_readPipeName} già stabilita","",ErrorMessages.ErrorMessages.ErrType.Messages);
+			}
+			
 			return _isConnected;
 		}
+	
 	}
 	#pragma warning restore CS8618 
+
 }
 

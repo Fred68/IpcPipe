@@ -54,7 +54,7 @@ namespace IpcPipes
 		/// <summary>
 		/// Funzione con ciclo di lettura eseguita dal thread secondario
 		/// </summary>
-		public static void ReadStream()
+		static void ReadStream()
 		{
 
 			List<string> lBuff = new List<string>();					// Buffer di lettura
@@ -118,9 +118,9 @@ namespace IpcPipes
 
 										case PONG_PK:
 										{
-											if(signalPong != null)
+											if(_signalPong != null)
 											{
-												signalPong(ppCon.ID);
+												_signalPong(ppCon.ID);
 											}
 										}
 										break;
@@ -140,16 +140,16 @@ namespace IpcPipes
 						catch ( Exception ex )
 						{
 							linea = string.Empty;
-							signalTxtMessage("Errore lettura linea da pipe " + ppCon.ToString() + "\n" + ex.Message);
+							_signalTxtMessage("Errore lettura linea da pipe " + ppCon.ToString() + "\n" + ex.Message);
 						}
 					} // ...if pipe sincronizzata
 				} // ...foreach tra le connessioni
 			}
 			while(_cycleEnabled);
 
-			if(signalEndCycle != null)
+			if(_signalEndCycle != null)
 			{
-				signalEndCycle();
+				_signalEndCycle();
 			}
 		}
 		
@@ -158,7 +158,7 @@ namespace IpcPipes
 		/// </summary>
 		/// <param name="list"></param>
 		/// <returns></returns>
-		public static string Buff2String(List<string> list)
+		static string Buff2String(List<string> list)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach(string s in list)
@@ -168,20 +168,13 @@ namespace IpcPipes
 
 		static void AnalysePacket(string str, PipeConnection pcon)
 		{
-			//signalTxtMessage("Stringa ricevuta\n" + str);
-
-			Pacchetto pk = Pacchetto.Deserialize(str, pcon);
+			Pacchetto pk = Pacchetto.Deserialize(str, pcon);	// _signalTxtMessage("Stringa ricevuta\n" + str);
 
 			if(pk != null)
 			{
-				string s = pk.ToString();
-				//signalTxtMessage("Messaggio ricevuto\n" + s);
-
+				
 				int cmd = pk.Command;
-				Type tp = pcon.GetDataType(cmd);
-
-				/************************************************/
-				// Generato da Copilot automaticamente. Probabilmente ok, ma da verificare
+				Type tp = pcon.GetDataType(cmd);				// string s = pk.ToString(); _signalTxtMessage("Ricevuto\n" + s);
 
 				if(tp != null)
 				{
@@ -191,78 +184,16 @@ namespace IpcPipes
 					}
 					else
 					{
-						signalTxtMessage("TypeDat di dato ricevuto non corrispondente a quello atteso");
+						_signalTxtMessage("TypeDat di dato ricevuto non corrispondente a quello atteso");
 					}
 				}
 				else
 				{
-					signalTxtMessage("Command ricevuto non registrato");
+					_signalTxtMessage("Command ricevuto non registrato");
 				}
-				/************************************************/
 
 			}
 		}
 
-		/// <summary>
-		/// Abilita il ciclo di lettura e lo avvia
-		/// </summary>
-		public void StartCycle()
-		{
-			if(!CycleEnabled)
-			{
-				CycleEnabled = true;
-				pipeReaderThread.Start();
-			}
-		}
-
-		#warning Aggiungere StopCycle(bool safe = true) per arrestare il ciclo di lettura (e il thread) in modo sicuro
-
-		/// <summary>
-		/// Crea il ciclo di lettura
-		/// </summary>
-		/// <param name="segnala_ciclo"></param>
-		/// <param name="segnala_fine_ciclo"></param>
-		/// <returns></returns>
-		public bool CreateCycle(CycleDelegates delegs)
-		{
-			bool ok = true;
-
-			if(delegs.segnala_ciclo != null)
-			{
-				signalCycleEnabled = delegs.segnala_ciclo;
-			}
-			else
-			{
-				AddErrMessage("Il delegate per segnalare avvio e arresto del ciclo non può essere null");
-				ok = false;
-			}
-
-			if(delegs.segnala_fine_ciclo != null)
-			{
-				signalEndCycle = delegs.segnala_fine_ciclo;
-			}
-			else
-			{
-				AddErrMessage("Il delegate per segnalare la fine del ciclo non può essere null");
-				ok = false;
-			}
-
-			if(ok)
-			{
-				pipeReaderThread = new Thread(ReadStream);
-			}
-			return ok;
-		}
-
-		public void RegisterTextMsgHandler(DelegateString handler)
-		{
-			signalTxtMessage = handler;
-		}
-
-		public void RegisterPongHandler(DelegateInt handler)
-		{
-			signalPong = handler;
-		}
-
-	}
+	}		
 }
